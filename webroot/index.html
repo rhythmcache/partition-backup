@@ -1,0 +1,96 @@
+<!DOCTYPE html><html lang="en">
+<head>
+    <title>Partition Backup</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="mmrl-safe-area">
+        <div class="container">
+            <div class="header">
+                <div class="header-controls">
+                    <div class="menu-icon" id="menuIcon">
+                        <div class="menu-line"></div>
+                        <div class="menu-line"></div>
+                        <div class="menu-line"></div>
+                    </div>
+                    <h1>KernelSU Partition Backup</h1>
+                </div>
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Search partitions..." class="search-input">
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Device Partitions</h2>
+                <div id="loading" class="loading">
+                    <div class="loader"></div>
+                    <span>Detecting partitions...</span>
+                </div>
+                <div id="partitionList" class="list-container">
+                    <!-- Partitions will be loaded here -->
+                </div>
+                <button id="backupAllBtn" class="btn">Backup All Partitions</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backup Status Sidebar -->
+    <div id="sidebarBackupStatus" class="sidebar">
+    <div class="sidebar-content">
+        <div class="sidebar-header">
+            <h2>Backup Status</h2>
+            <div class="close-btn" id="closeSidebar">&times;</div>
+        </div>
+        <div class="sidebar-body">
+            <div class="status-item">
+                <span>Backup Location</span>
+                <span id="backupLocation">/storage/emulated/0/Backups</span>
+            </div>
+            <div class="status-item">
+                <span>Last Backup</span>
+                <span id="lastBackup">Never</span>
+            </div>
+            <div class="status-item">
+                <span>Storage Available</span>
+                <span id="storageAvailable">Checking...</span>
+            </div>
+        </div>
+
+        <!-- Footer with links goes here -->
+        <div class="sidebar-footer">
+            <p class="sidebar-link" onclick="openLink('https://github.com/rhythmcache')">GitHub</p>
+            <p class="sidebar-link" onclick="openLink('https://t.me/rhythmcache')">Telegram</p>
+        </div>
+    </div>
+</div>
+
+    <!-- Confirm Dialog -->
+    <div id="confirmDialog" class="confirm-dialog">
+        <div class="dialog-content">
+            <h2 id="confirmTitle">Confirm Action</h2>
+            <p id="confirmMessage">Are you sure you want to continue?</p>
+            <div class="btn-group">
+                <button id="confirmNo" class="btn">Cancel</button>
+                <button id="confirmYes" class="btn btn-save">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Dialog -->
+    <div id="progressDialog" class="dialog">
+        <div class="dialog-content">
+            <h2>Backup in Progress</h2>
+            <p id="currentPartition">Backing up: boot</p>
+            <div class="progress" style="text-align: center; margin: 20px 0; height: auto; background: transparent;">
+                <div class="loader"></div>
+            </div>
+            <p id="progressStatus" class="status-text">Please wait...</p>
+            <div class="btn-group">
+                <button id="cancelBackup" class="btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
