@@ -3,7 +3,9 @@ let partitionsFound = [];
 let filteredPartitions = [];
 let isSelectionMode = false;
 let selectedPartitions = [];
-
+let isDynamicPartition = false;
+let currentActiveSlot = "";
+let isHidingInactiveSlots = false;
 
 
 function getUniqueCallbackName(prefix) {
@@ -44,6 +46,43 @@ async function exec(command) {
     });
 }
 
+function setupInactiveSlotToggle() {
+    const toggleCheckbox = document.getElementById('hideInactiveToggle');
+    toggleCheckbox.addEventListener('change', function() {
+        isHidingInactiveSlots = this.checked;
+        applyPartitionFilter();
+    });
+}
+
+async function checkDynamicPartitions() {
+    try {
+        const { stdout: isDynamic } = await exec('getprop ro.boot.dynamic_partitions');
+        isDynamicPartition = isDynamic.trim() === 'true';
+        const dynamicSection = document.getElementById('dynamicPartitionSection');
+        const dynamicStatus = document.getElementById('dynamicPartitionStatus');
+        
+        if (isDynamicPartition) {
+            dynamicSection.style.display = 'block';
+            dynamicStatus.textContent = 'Yes';
+            document.querySelector('.dynamic-status').classList.add('active');
+            const { stdout: slotSuffix } = await exec('getprop ro.boot.slot_suffix');
+            currentActiveSlot = slotSuffix.trim();
+            document.getElementById('activeSlotInfo').textContent = 
+                currentActiveSlot === '_a' ? 'A' : 
+                currentActiveSlot === '_b' ? 'B' : 
+                currentActiveSlot;
+            setupInactiveSlotToggle();
+        } else {
+            dynamicSection.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error checking dynamic partitions:', error);
+        document.getElementById('dynamicPartitionSection').style.display = 'none';
+    }
+}
+
+
+
 
 
 function showConfirmDialog(title, message, onConfirm) {
@@ -81,9 +120,11 @@ function showProgressDialog(partitionName) {
 
 
 
+
 function closeProgressDialog() {
     document.getElementById('progressDialog').style.display = 'none';
 }
+
 
 
 
@@ -118,6 +159,7 @@ async function findBootPartitionLocation() {
 
 
 
+
 async function getPartitions(basePath) {
     if (!basePath) return [];   
     const { stdout: partitionsList } = await exec(`ls -1 ${basePath}`);
@@ -141,6 +183,7 @@ async function getPartitions(basePath) {
     } 
     return result;
 }
+
 
 
 
@@ -193,11 +236,11 @@ async function backupPartition(partition, isMultiBackup = false, currentIndex = 
 
 
 
+
 function updateProgressDialogInfo(partitionName, currentIndex, totalCount) {
     document.getElementById('currentPartition').textContent = `Backing up: ${partitionName}`;
     document.getElementById('progressStatus').textContent = `Progress: ${currentIndex + 1} of ${totalCount} partitions`;
 }
-
 
 
 
@@ -243,6 +286,7 @@ async function backupAllPartitions() {
 
 
 
+
 async function updateStorageInfo() {
     try {
         const { stdout: available } = await exec('df -h /storage/emulated/0 | tail -1 | awk \'{print $4}\'');
@@ -274,18 +318,31 @@ async function updateLastBackup() {
 
 
 function filterPartitions(searchTerm) {
-    if (!searchTerm || searchTerm.trim() === '') {
-        filteredPartitions = [];
-        renderPartitionList(partitionsFound);
-        return;
+    let filtered = partitionsFound;
+    if (searchTerm && searchTerm.trim() !== '') {
+        searchTerm = searchTerm.toLowerCase();
+        filtered = filtered.filter(partition => 
+            partition.name.toLowerCase().includes(searchTerm) || 
+            partition.path.toLowerCase().includes(searchTerm)
+        );
     }
-    searchTerm = searchTerm.toLowerCase();
-    filteredPartitions = partitionsFound.filter(partition => 
-        partition.name.toLowerCase().includes(searchTerm) || 
-        partition.path.toLowerCase().includes(searchTerm)
-    );
+    if (isDynamicPartition && isHidingInactiveSlots && currentActiveSlot) {
+        const inactiveSlot = currentActiveSlot === '_a' ? '_b' : '_a';
+        filtered = filtered.filter(partition => !partition.name.endsWith(inactiveSlot));
+    }
+    filteredPartitions = filtered;
     renderPartitionList(filteredPartitions);
 }
+
+
+
+function applyPartitionFilter() {
+    const searchTerm = document.getElementById('searchInput').value;
+    filterPartitions(searchTerm);
+}
+
+
+
 
 function renderPartitionList(partitionsToRender) {
     const partitionListElement = document.getElementById('partitionList');
@@ -370,6 +427,7 @@ function renderPartitionList(partitionsToRender) {
 
 
 
+
 function setupSidebar() {
     const menuIcon = document.getElementById('menuIcon');
     const closeSidebar = document.getElementById('closeSidebar');
@@ -393,12 +451,14 @@ function setupSidebar() {
 
 
 
+
 function setupSearchBar() {
     const searchInput = document.getElementById('searchInput');
     searchInput.addEventListener('input', (e) => {
         filterPartitions(e.target.value);
     });
 }
+
 
 
 
@@ -446,12 +506,14 @@ function toggleItemSelection(partitionElement, partition) {
 }
 
 
+
 function updateSelectionCount() {
     const countElement = document.getElementById('selectionCount');
     countElement.textContent = selectedPartitions.length;
     const backupSelectedBtn = document.getElementById('backupSelectedBtn');
     backupSelectedBtn.classList.toggle('active', selectedPartitions.length > 0);
 }
+
 
 
 async function backupSelectedPartitions() {
@@ -475,6 +537,7 @@ async function backupSelectedPartitions() {
 }
 
 
+
     async function init() {
         try {
             if (window.isEnvironmentBlocked) {
@@ -493,6 +556,7 @@ async function backupSelectedPartitions() {
             return;
         }
         partitionsFound = await getPartitions(partitionPath);
+        await checkDynamicPartitions();
         document.getElementById('loading').style.display = 'none';
         renderPartitionList(partitionsFound);
         await updateStorageInfo();
@@ -507,6 +571,8 @@ async function backupSelectedPartitions() {
 }
 
 
+
+
 function openLink(url) {
             if (typeof ksu !== 'undefined' && ksu.exec) {
                 ksu.exec(`am start -a android.intent.action.VIEW -d "${url}"`, '{}', 'openLink_callback');
@@ -515,5 +581,7 @@ function openLink(url) {
             }
         }
 
+        
+        
 
 window.addEventListener('load', init);
