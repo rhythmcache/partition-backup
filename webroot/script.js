@@ -6,6 +6,7 @@ let selectedPartitions = [];
 let isDynamicPartition = false;
 let currentActiveSlot = "";
 let isHidingInactiveSlots = false;
+let saveMD5 = localStorage.getItem('saveMD5') === 'true';
 
 
 function getUniqueCallbackName(prefix) {
@@ -184,6 +185,28 @@ async function getPartitions(basePath) {
     return result;
 }
 
+function generateMD5ForFile(filePath, callback) {
+    const command = `md5sum "${filePath}" | awk '{print $1}'`;
+    ksu.exec(command, function (code, stdout, stderr) {
+        if (code === 0) {
+            const md5sum = stdout.trim();
+            const md5Path = filePath + ".md5";
+            ksu.exec(`echo "${md5sum}" > "${md5Path}"`, function (c, out, err) {
+                if (c === 0) {
+                    console.log(`MD5 saved to ${md5Path}`);
+                    callback && callback(true);
+                } else {
+                    console.error(`Failed to write MD5 to file: ${err}`);
+                    callback && callback(false);
+                }
+            });
+        } else {
+            console.error(`MD5 generation failed: ${stderr}`);
+            callback && callback(false);
+        }
+    });
+}
+
 
 
 
@@ -193,18 +216,31 @@ async function backupPartition(partition, isMultiBackup = false, currentIndex = 
             showProgressDialog(partition.name, isMultiBackup, currentIndex, totalCount);
         } else {
             updateProgressDialogInfo(partition.name, currentIndex, totalCount);
-        }       
-        await exec('mkdir -p /storage/emulated/0/PartBak');       
+        }
+
+        await exec('mkdir -p /storage/emulated/0/PartBak');
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const backupFile = `/storage/emulated/0/PartBak/${partition.name}_${timestamp}.img`;
         const ddCommand = `dd if=${partition.path} of=${backupFile} bs=8M conv=fsync,noerror`;
+
         document.getElementById('progressStatus').innerHTML = 'Backing up in progress...';
-        const result = await exec(ddCommand);       
+        const result = await exec(ddCommand);
+
         if (result.errno === 0) {
-            document.getElementById('progressStatus').textContent = isMultiBackup ? 
-                `Completed ${currentIndex + 1} of ${totalCount} partitions` : 
+            // If MD5 is enabled, compute checksum
+            if (saveMD5) {
+                document.getElementById('progressStatus').textContent = "Generating MD5 checksum...";
+                const md5Command = `md5sum "${backupFile}" | awk '{print $1}' > "${backupFile}.md5"`;
+                const md5Result = await exec(md5Command);
+                if (md5Result.errno !== 0) {
+                    console.warn(`Failed to save MD5 for ${partition.name}: ${md5Result.stderr}`);
+                }
+            }
+
+            document.getElementById('progressStatus').textContent = isMultiBackup ?
+                `Completed ${currentIndex + 1} of ${totalCount} partitions` :
                 "Backup completed successfully!";
-            
+
             if (!isMultiBackup) {
                 setTimeout(() => {
                     closeProgressDialog();
@@ -222,7 +258,7 @@ async function backupPartition(partition, isMultiBackup = false, currentIndex = 
             }
         } else {
             throw new Error(`dd command failed: ${result.stderr}`);
-        }   
+        }
     } catch (error) {
         console.error(`Backup failed: ${error}`);
         document.getElementById('progressStatus').textContent = "Backup failed!";
@@ -232,7 +268,6 @@ async function backupPartition(partition, isMultiBackup = false, currentIndex = 
         }, 1000);
     }
 }
-
 
 
 
@@ -548,6 +583,7 @@ async function backupSelectedPartitions() {
                 return;
             }  
             isEnvironmentSupported = true;
+            
         setupSidebar();
         setupSearchBar();
         const partitionPath = await findBootPartitionLocation();
@@ -564,6 +600,12 @@ async function backupSelectedPartitions() {
         document.getElementById('backupAllBtn').addEventListener('click', backupAllPartitions);
         document.getElementById('cancelSelectionBtn').addEventListener('click', () => toggleSelectionMode(false));
         document.getElementById('backupSelectedBtn').addEventListener('click', backupSelectedPartitions);
+        document.getElementById("md5Toggle").checked = saveMD5;
+        document.getElementById("md5Toggle").addEventListener("change", function () {
+        saveMD5 = this.checked;
+        localStorage.setItem('saveMD5', saveMD5);
+        console.log("Save MD5 Checksum:", saveMD5);
+        });
     } catch (error) {
         console.error('Initialization error:', error);
         document.getElementById('loading').innerHTML = `Error: ${error.message}`;
