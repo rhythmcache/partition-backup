@@ -4,9 +4,29 @@ let filteredPartitions = [];
 let isSelectionMode = false;
 let selectedPartitions = [];
 
+
+
 function getUniqueCallbackName(prefix) {
     return `${prefix}_${Math.random().toString(36).substr(2, 9)}`;
 }
+
+
+
+
+function showEnvironmentDialog() {
+    const dialog = document.getElementById('environmentDialog');
+    dialog.style.display = 'flex';
+    dialog.style.zIndex = '9999';   
+    document.getElementById('closeApp').addEventListener('click', () => {
+        window.location.reload();
+    });   
+    document.querySelectorAll('.container, .header, .card').forEach(element => {
+        element.style.pointerEvents = 'none';
+    });
+}
+
+
+
 
 async function exec(command) {
     return new Promise((resolve, reject) => {
@@ -24,22 +44,23 @@ async function exec(command) {
     });
 }
 
+
+
 function showConfirmDialog(title, message, onConfirm) {
     const dialog = document.getElementById('confirmDialog');
     document.getElementById('confirmTitle').textContent = title;
     document.getElementById('confirmMessage').textContent = message;
-    
     document.getElementById('confirmYes').onclick = () => {
         onConfirm();
         dialog.style.display = 'none';
     };
-    
     document.getElementById('confirmNo').onclick = () => {
         dialog.style.display = 'none';
     };
-    
     dialog.style.display = 'flex';
 }
+
+
 
 function showProgressDialog(partitionName) {
     const dialog = document.getElementById('progressDialog');
@@ -47,7 +68,6 @@ function showProgressDialog(partitionName) {
     document.getElementById('progressStatus').textContent = 'Starting backup...';
     
     document.getElementById('cancelBackup').onclick = () => {
-        // Add logic to cancel the backup process
         exec('pkill dd').then(() => {
             alert('Backup cancelled');
             dialog.style.display = 'none';
@@ -56,18 +76,19 @@ function showProgressDialog(partitionName) {
             alert('Failed to cancel backup');
         });
     };
-    
     dialog.style.display = 'flex';
 }
+
+
 
 function closeProgressDialog() {
     document.getElementById('progressDialog').style.display = 'none';
 }
 
+
+
 async function findBootPartitionLocation() {
-    // Check in /dev/block/by-name
     const { stdout: byNameExists } = await exec('[ -d "/dev/block/by-name" ] && echo "yes" || echo "no"');
-    
     if (byNameExists === "yes") {
         const { stdout: bootExists } = await exec('[ -e "/dev/block/by-name/boot" -o -e "/dev/block/by-name/boot_a" ] && echo "yes" || echo "no"');
         
@@ -75,10 +96,7 @@ async function findBootPartitionLocation() {
             return "/dev/block/by-name";
         }
     }
-    
-    // Check in /dev/block/bootdevice/by-name
     const { stdout: bootdeviceExists } = await exec('[ -d "/dev/block/bootdevice/by-name" ] && echo "yes" || echo "no"');
-    
     if (bootdeviceExists === "yes") {
         const { stdout: bootExists } = await exec('[ -e "/dev/block/bootdevice/by-name/boot" -o -e "/dev/block/bootdevice/by-name/boot_a" ] && echo "yes" || echo "no"');
         
@@ -86,10 +104,7 @@ async function findBootPartitionLocation() {
             return "/dev/block/bootdevice/by-name";
         }
     }
-    
-    // Check using proc cmdline
     const { stdout: bootDevice } = await exec('grep -o "androidboot.boot_devices=[^ ]*" /proc/cmdline | cut -d "=" -f2');
-    
     if (bootDevice) {
         const path = `/dev/block/platform/${bootDevice}/by-name`;
         const { stdout: pathExists } = await exec(`[ -d "${path}" ] && echo "yes" || echo "no"`);
@@ -98,16 +113,15 @@ async function findBootPartitionLocation() {
             return path;
         }
     }
-    
     return null;
 }
 
+
+
 async function getPartitions(basePath) {
-    if (!basePath) return [];
-    
+    if (!basePath) return [];   
     const { stdout: partitionsList } = await exec(`ls -1 ${basePath}`);
-    const partitions = partitionsList.split('\n').filter(p => p.trim() !== '');
-    
+    const partitions = partitionsList.split('\n').filter(p => p.trim() !== '');  
     const result = [];
     for (const partition of partitions) {
         const { stdout: realPath } = await exec(`readlink -f ${basePath}/${partition}`);
@@ -124,36 +138,25 @@ async function getPartitions(basePath) {
             size: formattedSize,
             sizeBytes: size
         });
-    }
-    
+    } 
     return result;
 }
 
+
+
 async function backupPartition(partition, isMultiBackup = false, currentIndex = 0, totalCount = 1) {
     try {
-        // Only show the dialog if it's not already visible in a multi-backup scenario
         if (!isMultiBackup || currentIndex === 0) {
             showProgressDialog(partition.name, isMultiBackup, currentIndex, totalCount);
         } else {
-            // Just update the current partition info
             updateProgressDialogInfo(partition.name, currentIndex, totalCount);
-        }
-        
-        // Create the backup directory if it doesn't exist
-        await exec('mkdir -p /storage/emulated/0/Backups');
-        
+        }       
+        await exec('mkdir -p /storage/emulated/0/PartBak');       
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const backupFile = `/storage/emulated/0/Backups/${partition.name}_${timestamp}.img`;
-        
-        // Use dd without status=progress option
+        const backupFile = `/storage/emulated/0/PartBak/${partition.name}_${timestamp}.img`;
         const ddCommand = `dd if=${partition.path} of=${backupFile} bs=8M conv=fsync,noerror`;
-        
-        // Update UI to show spinner
         document.getElementById('progressStatus').innerHTML = 'Backing up in progress...';
-        
-        // Execute the dd command
-        const result = await exec(ddCommand);
-        
+        const result = await exec(ddCommand);       
         if (result.errno === 0) {
             document.getElementById('progressStatus').textContent = isMultiBackup ? 
                 `Completed ${currentIndex + 1} of ${totalCount} partitions` : 
@@ -167,7 +170,6 @@ async function backupPartition(partition, isMultiBackup = false, currentIndex = 
                 }, 1000);
             } else {
                 updateLastBackup();
-                // Only close dialog when all partitions are backed up
                 if (currentIndex === totalCount - 1) {
                     setTimeout(() => {
                         closeProgressDialog();
@@ -177,8 +179,7 @@ async function backupPartition(partition, isMultiBackup = false, currentIndex = 
             }
         } else {
             throw new Error(`dd command failed: ${result.stderr}`);
-        }
-        
+        }   
     } catch (error) {
         console.error(`Backup failed: ${error}`);
         document.getElementById('progressStatus').textContent = "Backup failed!";
@@ -189,25 +190,27 @@ async function backupPartition(partition, isMultiBackup = false, currentIndex = 
     }
 }
 
+
+
+
 function updateProgressDialogInfo(partitionName, currentIndex, totalCount) {
     document.getElementById('currentPartition').textContent = `Backing up: ${partitionName}`;
     document.getElementById('progressStatus').textContent = `Progress: ${currentIndex + 1} of ${totalCount} partitions`;
 }
 
-// Update the showProgressDialog function to display multi-backup info
+
+
+
 function showProgressDialog(partitionName, isMultiBackup = false, currentIndex = 0, totalCount = 1) {
-    const dialog = document.getElementById('progressDialog');
-    
+    const dialog = document.getElementById('progressDialog');   
     if (isMultiBackup) {
         document.getElementById('currentPartition').textContent = `Backing up: ${partitionName}`;
         document.getElementById('progressStatus').textContent = `Progress: ${currentIndex + 1} of ${totalCount} partitions`;
     } else {
         document.getElementById('currentPartition').textContent = `Backing up: ${partitionName}`;
         document.getElementById('progressStatus').textContent = 'Starting backup...';
-    }
-    
+    } 
     document.getElementById('cancelBackup').onclick = () => {
-        // Add logic to cancel the backup process
         exec('pkill dd').then(() => {
             alert('Backup cancelled');
             dialog.style.display = 'none';
@@ -216,32 +219,29 @@ function showProgressDialog(partitionName, isMultiBackup = false, currentIndex =
             alert('Failed to cancel backup');
         });
     };
-    
     dialog.style.display = 'flex';
 }
 
 
+
 async function backupAllPartitions() {
-    const partitionsToBackup = filteredPartitions.length > 0 ? filteredPartitions : partitionsFound;
-    
+    const partitionsToBackup = filteredPartitions.length > 0 ? filteredPartitions : partitionsFound;   
     showConfirmDialog(
         "Backup All Partitions",
         `Are you sure you want to backup all ${partitionsToBackup.length} partitions? This may take a while.`,
         async () => {
-            // Sort partitions by size (smallest first)
             const sortedPartitions = [...partitionsToBackup].sort((a, b) => 
                 parseInt(a.sizeBytes) - parseInt(b.sizeBytes)
             );
-            
-            // Use a loop that passes multi-backup flag and index information
             for (let i = 0; i < sortedPartitions.length; i++) {
                 await backupPartition(sortedPartitions[i], true, i, sortedPartitions.length);
             }
-            
-            // No need for an alert here as the last backupPartition call will show it
         }
     );
 }
+
+
+
 
 async function updateStorageInfo() {
     try {
@@ -252,6 +252,8 @@ async function updateStorageInfo() {
         document.getElementById('storageAvailable').textContent = 'Error';
     }
 }
+
+
 
 async function updateLastBackup() {
     try {
@@ -269,19 +271,19 @@ async function updateLastBackup() {
     }
 }
 
+
+
 function filterPartitions(searchTerm) {
     if (!searchTerm || searchTerm.trim() === '') {
         filteredPartitions = [];
         renderPartitionList(partitionsFound);
         return;
     }
-    
     searchTerm = searchTerm.toLowerCase();
     filteredPartitions = partitionsFound.filter(partition => 
         partition.name.toLowerCase().includes(searchTerm) || 
         partition.path.toLowerCase().includes(searchTerm)
     );
-    
     renderPartitionList(filteredPartitions);
 }
 
@@ -293,20 +295,16 @@ function renderPartitionList(partitionsToRender) {
         partitionListElement.innerHTML = '<div class="no-partitions">No partitions found</div>';
         return;
     }
-    
     partitionsToRender.forEach(partition => {
         const partitionElement = document.createElement('div');
         partitionElement.className = 'partition-item';
         if (isSelectionMode) {
             partitionElement.classList.add('selectable');
-            
-            // Check if this partition is in the selectedPartitions array
             const isSelected = selectedPartitions.some(p => p.name === partition.name);
             if (isSelected) {
                 partitionElement.classList.add('selected');
             }
-        }
-        
+        }     
         partitionElement.innerHTML = `
             <div class="partition-info">
                 <img src="logo.png" alt="IMG" class="partition-image">
@@ -321,10 +319,7 @@ function renderPartitionList(partitionsToRender) {
                 <div class="selection-checkbox"></div>
             </div>
         `;
-        
         partitionListElement.appendChild(partitionElement);
-        
-        // Setup backup button click only if not in selection mode
         if (!isSelectionMode) {
             const backupButton = partitionElement.querySelector('.backup-btn');
             backupButton.addEventListener('click', () => {
@@ -335,19 +330,15 @@ function renderPartitionList(partitionsToRender) {
                 );
             });
         }
-        
-        // Setup long press and click for selection
-        let longPressTimer;
-        
+        let longPressTimer;   
         partitionElement.addEventListener('touchstart', (e) => {
             longPressTimer = setTimeout(() => {
                 if (!isSelectionMode) {
                     toggleSelectionMode(true);
                 }
                 toggleItemSelection(partitionElement, partition);
-            }, 500); // 500ms for long press
-        });
-        
+            }, 500);
+        });      
         partitionElement.addEventListener('touchend', () => {
             clearTimeout(longPressTimer);
         });
@@ -355,8 +346,6 @@ function renderPartitionList(partitionsToRender) {
         partitionElement.addEventListener('touchmove', () => {
             clearTimeout(longPressTimer);
         });
-        
-        // For desktop/debugging
         partitionElement.addEventListener('mousedown', (e) => {
             longPressTimer = setTimeout(() => {
                 if (!isSelectionMode) {
@@ -365,16 +354,12 @@ function renderPartitionList(partitionsToRender) {
                 toggleItemSelection(partitionElement, partition);
             }, 500);
         });
-        
         partitionElement.addEventListener('mouseup', () => {
             clearTimeout(longPressTimer);
         });
-        
         partitionElement.addEventListener('mouseleave', () => {
             clearTimeout(longPressTimer);
         });
-        
-        // Click handling in selection mode
         partitionElement.addEventListener('click', () => {
             if (isSelectionMode) {
                 toggleItemSelection(partitionElement, partition);
@@ -383,54 +368,49 @@ function renderPartitionList(partitionsToRender) {
     });
 }
 
+
+
 function setupSidebar() {
     const menuIcon = document.getElementById('menuIcon');
     const closeSidebar = document.getElementById('closeSidebar');
     const sidebar = document.getElementById('sidebarBackupStatus');
-    
-    // Create overlay element
     const overlay = document.createElement('div');
     overlay.className = 'sidebar-overlay';
     document.body.appendChild(overlay);
-    
     menuIcon.addEventListener('click', () => {
         sidebar.classList.add('active');
         overlay.style.display = 'block';
     });
-    
     closeSidebar.addEventListener('click', () => {
         sidebar.classList.remove('active');
         overlay.style.display = 'none';
     });
-    
-    // Close sidebar when overlay is clicked
     overlay.addEventListener('click', () => {
         sidebar.classList.remove('active');
         overlay.style.display = 'none';
     });
 }
 
+
+
 function setupSearchBar() {
     const searchInput = document.getElementById('searchInput');
-    
     searchInput.addEventListener('input', (e) => {
         filterPartitions(e.target.value);
     });
 }
 
+
+
 function toggleSelectionMode(enable) {
     isSelectionMode = enable;
-    
     const selectionIndicator = document.getElementById('selectionModeIndicator');
     const backupAllBtn = document.getElementById('backupAllBtn');
     const backupSelectedBtn = document.getElementById('backupSelectedBtn');
-    
     if (enable) {
         selectionIndicator.classList.add('active');
         backupAllBtn.style.display = 'none';
         backupSelectedBtn.style.display = 'block';
-        
-        // Add selectable class to all partition items
         document.querySelectorAll('.partition-item').forEach(item => {
             item.classList.add('selectable');
         });
@@ -438,21 +418,19 @@ function toggleSelectionMode(enable) {
         selectionIndicator.classList.remove('active');
         backupAllBtn.style.display = 'block';
         backupSelectedBtn.style.display = 'none';
-        
-        // Remove selectable class and selected class from all items
         document.querySelectorAll('.partition-item').forEach(item => {
             item.classList.remove('selectable', 'selected');
         });
-        
-        // Clear selection
         selectedPartitions = [];
         updateSelectionCount();
     }
 }
 
+
+
+
 function toggleItemSelection(partitionElement, partition) {
-    const isSelected = partitionElement.classList.toggle('selected');
-    
+    const isSelected = partitionElement.classList.toggle('selected');  
     if (isSelected) {
         selectedPartitions.push(partition);
     } else {
@@ -461,99 +439,73 @@ function toggleItemSelection(partitionElement, partition) {
             selectedPartitions.splice(index, 1);
         }
     }
-    
     updateSelectionCount();
-    
-    // Exit selection mode if no items are selected
     if (selectedPartitions.length === 0) {
         toggleSelectionMode(false);
     }
 }
 
+
 function updateSelectionCount() {
     const countElement = document.getElementById('selectionCount');
     countElement.textContent = selectedPartitions.length;
-    
-    // Show/hide backup selected button
     const backupSelectedBtn = document.getElementById('backupSelectedBtn');
     backupSelectedBtn.classList.toggle('active', selectedPartitions.length > 0);
 }
 
-// Add this function to backup selected partitions
+
 async function backupSelectedPartitions() {
     if (selectedPartitions.length === 0) {
         alert('No partitions selected');
         return;
     }
-    
     showConfirmDialog(
         "Backup Selected Partitions",
         `Are you sure you want to backup ${selectedPartitions.length} selected partition(s)?`,
         async () => {
-            // Sort partitions by size (smallest first)
             const sortedPartitions = [...selectedPartitions].sort((a, b) => 
                 parseInt(a.sizeBytes) - parseInt(b.sizeBytes)
             );
-            
-            // Use a loop that passes multi-backup flag and index information
             for (let i = 0; i < sortedPartitions.length; i++) {
                 await backupPartition(sortedPartitions[i], true, i, sortedPartitions.length);
             }
-            
-            // The last partition backup will handle the dialog closing
             toggleSelectionMode(false);
         }
     );
 }
 
-async function init() {
-    try {
-        // Check if KernelSU environment is available
-        if (typeof ksu === 'undefined') {
-            alert('KernelSU environment not detected. This app requires KernelSU.');
-            return;
-        }
-        
-        isEnvironmentSupported = true;
-        
-        // Set up sidebar and search functionality
+
+    async function init() {
+        try {
+            if (window.isEnvironmentBlocked) {
+                return;
+            }
+            if (typeof ksu === 'undefined' || typeof ksu.exec === 'undefined') {
+                showEnvironmentDialog();
+                return;
+            }  
+            isEnvironmentSupported = true;
         setupSidebar();
         setupSearchBar();
-        
-        // Find partition path
         const partitionPath = await findBootPartitionLocation();
-        
         if (!partitionPath) {
             document.getElementById('loading').innerHTML = 'Failed to find partition location';
             return;
         }
-        
-        // Get partitions
         partitionsFound = await getPartitions(partitionPath);
-        
-        // Hide loading indicator
         document.getElementById('loading').style.display = 'none';
-        
-        // Render partition list
         renderPartitionList(partitionsFound);
-        
-        // Update storage info
         await updateStorageInfo();
-        
-        // Update last backup info
         await updateLastBackup();
-        
-        // Setup backup all button
         document.getElementById('backupAllBtn').addEventListener('click', backupAllPartitions);
-        
         document.getElementById('cancelSelectionBtn').addEventListener('click', () => toggleSelectionMode(false));
         document.getElementById('backupSelectedBtn').addEventListener('click', backupSelectedPartitions);
-        
     } catch (error) {
         console.error('Initialization error:', error);
         document.getElementById('loading').innerHTML = `Error: ${error.message}`;
     }
 }
+
 
 function openLink(url) {
             if (typeof ksu !== 'undefined' && ksu.exec) {
@@ -563,5 +515,5 @@ function openLink(url) {
             }
         }
 
-// Initialize when the page loads
+
 window.addEventListener('load', init);
