@@ -9,24 +9,27 @@
     --text-secondary: #A0A0A0;
     --border: rgba(255, 255, 255, 0.1);
     --radius: 12px;
-}
+    }
 
-* {
+
+    * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     font-size: 14px;
-}
+    }
 
-html, body {
+
+    html, body {
     height: 100%;
     margin: 0;
     padding: 0;
-    overflow: hidden; /* Prevent scrolling on body */
-}
+    overflow: hidden;
+    }
 
-.mmrl-safe-area {
+
+    .mmrl-safe-area {
     padding-top: var(--window-inset-top, 0);
     padding-bottom: var(--window-inset-bottom, 0);
     padding-left: var(--window-inset-left, 0);
@@ -34,9 +37,10 @@ html, body {
     height: 100vh;
     display: flex;
     flex-direction: column;
-}
+    }
 
-.dialog, .confirm-dialog {
+
+    .dialog, .confirm-dialog {
     position: fixed;
     top: 0;
     left: 0;
@@ -48,130 +52,169 @@ html, body {
     justify-content: center;
     align-items: center;
     z-index: 1000;
-}
+    }
 
-.dialog-content {
+
+    .dialog-content {
     background: var(--card-bg);
     padding: 20px;
     border-radius: var(--radius);
     max-width: 400px;
     width: 100%;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
+    }
 
-.dialog-content h2 {
+
+    .dialog-content h2 {
     margin-bottom: 16px;
-}
+    }
 
-.dialog-content .btn-group {
+
+    .dialog-content .btn-group {
     justify-content: flex-end;
     margin-top: 16px;
-}
+    }
 
-body {
+
+    body {
     background: var(--dark-bg);
     color: var(--text);
     line-height: 1.4;
-}
+    }
 
 
-/* Make the card wider */
-.container {
+    #environmentDialog {
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    max-width: 900px; /* Increased from 800px */
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    }
+
+
+    #environmentDialog .dialog-content {
+    border: 2px solid #ff4d4d;
+    max-width: 90%;
+    text-align: center;
+    }
+
+
+    #environmentDialog h2 {
+    color: #ff4d4d;
+    font-size: 20px;
+    }
+
+
+    #environmentDialog .status-text {
+    color: #ff4d4d;
+    font-weight: bold;
+    margin: 16px 0;
+    }
+
+
+    .container {
+    width: 100%;
+    max-width: 900px;
     padding: 16px;
     margin: 0 auto;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     height: 100%;
-}
+    }
 
-/* Add styling for the partition image */
-.partition-image {
+
+    .partition-image {
     width: 24px;
     height: 24px;
     margin-right: 10px;
-    border-radius: 50%; /* Make the image round */
-}
+    border-radius: 50%;
+    }
 
-.partition-info {
+
+    .partition-info {
     display: flex;
     align-items: center;
     flex: 1;
-}
+    }
 
-.partition-details {
+
+
+    .partition-details {
     display: flex;
     flex-direction: column;
     justify-content: center;
-}
+    }
 
-.partition-action {
+
+    .partition-action {
     display: flex;
     align-items: center;
-}
+    }
 
 
-/* Selection styling */
-.partition-item {
+    .partition-item {
     position: relative;
     transition: background-color 0.2s;
-}
+    }
 
 
-
-
-.partition-item.selected .selection-checkbox {
+    .partition-item.selected .selection-checkbox {
     background-color: #4da6ff;
     display: flex;
-}
+    }
 
-.selection-checkbox::after {
+
+    .selection-checkbox::after {
     content: "✓";
     color: white;
     font-size: 12px;
     font-weight: bold;
-}
+    }
 
-/* Remove the selection checkbox completely */
-.selection-checkbox {
-    display: none !important; /* Hide the checkbox completely */
-}
 
-/* Enhance the selected item styling */
-.partition-item.selected {
+    .selection-checkbox {
+    display: none !important;
+    }
+
+
+
+    .partition-item.selected {
     background-color: rgba(77, 166, 255, 0.15);
-    border-radius: var(--radius); /* Match the card's border radius */
-    padding-left: 10px; /* Add some padding for better visual appearance */
+    border-radius: var(--radius);
+    padding-left: 10px;
     padding-right: 10px;
     margin-left: -10px;
     margin-right: -10px;
     transition: background-color 0.2s, border-radius 0.2s;
-}
+    }
 
-/* Adjust spacing for partition size in selection mode */
-.partition-item.selectable .partition-size {
-    margin-right: 12px; /* Reduce the margin since we no longer need space for the checkbox */
-}
 
-/* Keep consistent spacing when selected */
-.partition-item.selected .partition-size {
+    .partition-item.selectable .partition-size {
     margin-right: 12px;
-}
+    }
 
-/* Completely hide the backup button in selection mode */
-.partition-item.selectable .backup-btn {
-    display: none !important; /* Use !important to ensure it's hidden */
+
+    .partition-item.selected .partition-size {
+    margin-right: 12px;
+    }
+
+
+    .partition-item.selectable .backup-btn {
+    display: none !important;
     opacity: 0;
     visibility: hidden;
-    position: absolute; /* Remove from layout flow */
-}
+    position: absolute;
+    }
 
 
-
-/* Selection mode indicator */
-.selection-mode-indicator {
+    .selection-mode-indicator {
     background-color: rgba(77, 166, 255, 0.9);
     color: white;
     padding: 8px 16px;
@@ -180,91 +223,95 @@ body {
     display: none;
     justify-content: space-between;
     align-items: center;
-}
+    }
 
-.selection-mode-indicator.active {
+
+    .selection-mode-indicator.active {
     display: flex;
-}
+    }
 
-.selection-actions {
+
+    .selection-actions {
     display: flex;
     gap: 8px;
-}
+    }
 
-.selection-count {
+
+    .selection-count {
     font-weight: 500;
-}
+    }
 
-/* Backup selected button */
-#backupSelectedBtn {
+
+    #backupSelectedBtn {
     background: #4da6ff;
     width: 100%;
     margin-top: 12px;
     padding: 10px;
     font-weight: bold;
     display: none;
-}
+    }
 
-#backupSelectedBtn.active {
+
+    #backupSelectedBtn.active {
     display: block;
-}
-/* */
+    }
 
-.partition-action {
+
+    .partition-action {
     display: flex;
     align-items: center;
-}
+    }
 
-/* Make the backup button slightly bigger */
-.backup-btn {
+
+    .backup-btn {
     background: #4da6ff;
     color: white;
     padding: 6px 14px;
     border-radius: 20px;
     font-size: 13px;
     font-weight: 500;
-}
+    }
 
 
-.card {
+    .card {
     background: var(--card-bg);
     border-radius: var(--radius);
     padding: 16px;
     margin-bottom: 16px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    flex: 1; /* Allow the card to take available space */
+    flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Ensure content doesn't overflow */
-}
+    overflow: hidden;
+    }
 
-.list-container {
+
+    .list-container {
     flex: 1;
     overflow-y: auto;
     margin-bottom: 16px;
     position: relative;
-    min-height: 0; /* This prevents it from collapsing if there's no content */
-}
+    min-height: 0;
+    }
 
 
-.header {
+    .header {
     margin-bottom: 24px;
     padding: 16px;
     background: var(--card-bg);
     border-radius: var(--radius);
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
+    }
 
 
-
-
-.header-controls {
+    .header-controls {
     display: flex;
     align-items: center;
     margin-bottom: 12px;
-}
+    }
 
-.menu-icon {
+
+    .menu-icon {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -272,25 +319,29 @@ body {
     height: 18px;
     margin-right: 16px;
     cursor: pointer;
-}
+    }
 
-.menu-line {
+
+    .menu-line {
     width: 100%;
     height: 2px;
     background-color: var(--text);
     transition: all 0.3s ease;
-}
+    }
 
-.header h1 {
+
+    .header h1 {
     font-size: 20px;
     margin: 0;
-}
+    }
 
-.search-container {
+
+    .search-container {
     margin-top: 12px;
-}
+    }
 
-.search-input {
+
+    .search-input {
     width: 100%;
     padding: 10px 12px;
     background: rgba(255, 255, 255, 0.1);
@@ -299,81 +350,91 @@ body {
     color: var(--text);
     outline: none;
     transition: all 0.3s ease;
-}
+    }
 
-.search-input:focus {
+
+    .search-input:focus {
     border-color: #4da6ff;
     background: rgba(255, 255, 255, 0.15);
-}
+    }
 
 
-
-.card h2 {
+    .card h2 {
     font-size: 16px;
     margin-bottom: 12px;
-}
+    }
 
-.progress {
+
+    .progress {
     height: 8px;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 4px;
     overflow: hidden;
     margin: 8px 0;
     text-align: center;
-}
+    }
 
-.progress-bar {
+
+    .progress-bar {
     height: 100%;
     background: #4da6ff;
     width: 0%;
     transition: width 0.3s;
-}
+    }
 
-.partition-item {
+
+    .partition-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 12px 0;
     border-bottom: 1px solid var(--border);
-}
+    }
 
-.partition-item:last-child {
+
+    .partition-item:last-child {
     border-bottom: none;
-}
+    }
 
-.partition-info {
+
+    .partition-info {
     flex: 1;
-}
+    }
 
-.partition-name {
+
+    .partition-name {
     font-weight: 500;
     font-size: 15px;
     margin-bottom: 2px;
-}
+    }
 
-.partition-path {
+    
+    .partition-path {
     font-size: 12px;
     color: var(--text-secondary);
     margin-top: 2px;
     word-break: break-all;
-}
+    }
 
-.partition-size {
+
+    .partition-size {
     font-size: 12px;
     background: rgba(255, 255, 255, 0.1);
     padding: 4px 8px;
     border-radius: 12px;
     margin-right: 12px;
-}
+    }
 
-.btn-group {
+
+    .btn-group {
     display: flex;
     gap: 8px;
     margin-top: 12px;
     flex-wrap: wrap;
-}
+    }
 
-.btn {
+
+    .btn {
     padding: 8px 16px;
     border: none;
     border-radius: var(--radius);
@@ -385,26 +446,31 @@ body {
     color: var(--text);
     position: relative;
     overflow: hidden;
-}
+    }
 
-.btn:active {
+
+    .btn:active {
     transform: scale(0.96);
-}
+    }
 
-.btn-save {
+
+    .btn-save {
     background: #4da6ff;
-}
+    }
 
-.btn-refresh {
+
+    .btn-refresh {
     background: var(--primary);
-}
+    }
 
-.btn-small {
+
+    .btn-small {
     padding: 5px 10px;
     font-size: 12px;
-}
+    }
 
-.loader {
+
+    .loader {
     display: inline-block;
     border: 2px solid rgba(255, 255, 255, 0.1);
     border-top: 2px solid #4da6ff;
@@ -413,58 +479,63 @@ body {
     height: 16px;
     animation: spin 1s linear infinite;
     margin-right: 8px;
-}
+    }
 
-@keyframes spin {
+
+    @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
-}
+    }
 
 
-
-.backup-status {
+    .backup-status {
     margin-top: 4px;
     font-size: 12px;
     color: #4da6ff;
     display: none;
-}
+    }
 
-/* Additional Styles */
-#backupAllBtn {
+
+    #backupAllBtn {
     background: #4da6ff;
     width: 100%;
     margin-top: 12px;
     padding: 10px;
     font-weight: bold;
     margin-top: auto;
-}
+    }
 
-.loading {
+
+    .loading {
     display: flex;
     align-items: center;
     justify-content: center;
     height: 80px;
-}
+    }
 
-.status-text {
+
+
+    .status-text {
     font-size: 12px;
     text-align: center;
     color: var(--text-secondary);
-}
+    }
 
-.status-item {
+
+    .status-item {
     display: flex;
     justify-content: space-between;
     padding: 8px 0;
     border-bottom: 1px solid var(--border);
-}
+    }
 
-.status-item:last-child {
+
+    .status-item:last-child {
     border-bottom: none;
-}
+    }
 
-/* Sidebar Styles */
-.sidebar {
+
+    .sidebar {
     position: fixed;
     top: 0;
     left: -300px;
@@ -474,44 +545,50 @@ body {
     z-index: 1001;
     transition: left 0.3s ease;
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
-}
+    }
 
-.sidebar.active {
+
+    .sidebar.active {
     left: 0;
-}
+    }
 
-.sidebar-content {
+
+    .sidebar-content {
     height: 100%;
     display: flex;
     flex-direction: column;
     padding: 16px;
-}
+    }
 
-.sidebar-header {
+
+    .sidebar-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--border);
-}
+    }
 
-.sidebar-header h2 {
+
+    .sidebar-header h2 {
     font-size: 18px;
     margin: 0;
-}
+    }
 
-.close-btn {
+
+    .close-btn {
     font-size: 24px;
     cursor: pointer;
-}
+    }
 
-.sidebar-body {
+
+    .sidebar-body {
     flex: 1;
-}
+    }
 
-/* Overlay when sidebar is active */
-.sidebar-overlay {
+
+    .sidebar-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -521,20 +598,22 @@ body {
     backdrop-filter: blur(2px);
     z-index: 1000;
     display: none;
-}
+    }
 
-.sidebar-footer {
+
+    .sidebar-footer {
     margin-top: auto;
     padding-top: 12px;
     border-top: 1px solid var(--border);
     display: flex;
     flex-direction: column;
     gap: 6px;
-}
+    }
 
-.sidebar-link {
+
+    .sidebar-link {
     color: #4da6ff;
     text-decoration: underline;
     cursor: pointer;
     font-size: 13px;
-}
+    }
