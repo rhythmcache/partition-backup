@@ -1,9 +1,19 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>Partition Backup</title>
+    <title>PartBak</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- MMRL Styles -->
+    <link rel="stylesheet" href="https://mui.kernelsu.org/mmrl/insets.css">
+    <link rel="stylesheet" href="https://mui.kernelsu.org/mmrl/colors.css">
+
+    <!-- Your App Styles -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
     <div class="mmrl-safe-area">
         <div class="container">
             <div class="header">
@@ -13,7 +23,7 @@
                         <div class="menu-line"></div>
                         <div class="menu-line"></div>
                     </div>
-                    <h1>KernelSU Partition Backup</h1>
+                    <h1>Partition Backup</h1>
                 </div>
                 <div class="search-container">
                     <input type="text" id="searchInput" placeholder="Search partitions..." class="search-input">
@@ -29,40 +39,52 @@
                 <div id="partitionList" class="list-container">
                     <!-- Partitions will be loaded here -->
                 </div>
+
+                <!-- Selection mode indicator -->
+                <div id="selectionModeIndicator" class="selection-mode-indicator">
+                    <div class="selection-count">
+                        <span id="selectionCount">0</span> selected
+                    </div>
+                    <div class="selection-actions">
+                        <button id="cancelSelectionBtn" class="btn btn-small">Cancel</button>
+                    </div>
+                </div>
+
+                <!-- Backup buttons -->
                 <button id="backupAllBtn" class="btn">Backup All Partitions</button>
+                <button id="backupSelectedBtn" class="btn">Backup Selected Partitions</button>
             </div>
         </div>
     </div>
 
     <!-- Backup Status Sidebar -->
     <div id="sidebarBackupStatus" class="sidebar">
-    <div class="sidebar-content">
-        <div class="sidebar-header">
-            <h2>Backup Status</h2>
-            <div class="close-btn" id="closeSidebar">&times;</div>
-        </div>
-        <div class="sidebar-body">
-            <div class="status-item">
-                <span>Backup Location</span>
-                <span id="backupLocation">/storage/emulated/0/Backups</span>
+        <div class="sidebar-content">
+            <div class="sidebar-header">
+                <h2>Backup Status</h2>
+                <div class="close-btn" id="closeSidebar">&times;</div>
             </div>
-            <div class="status-item">
-                <span>Last Backup</span>
-                <span id="lastBackup">Never</span>
+            <div class="sidebar-body">
+                <div class="status-item">
+                    <span>Backup Location</span>
+                    <span id="backupLocation">/storage/emulated/0/Backups</span>
+                </div>
+                <div class="status-item">
+                    <span>Last Backup</span>
+                    <span id="lastBackup">Never</span>
+                </div>
+                <div class="status-item">
+                    <span>Storage Available</span>
+                    <span id="storageAvailable">Checking...</span>
+                </div>
             </div>
-            <div class="status-item">
-                <span>Storage Available</span>
-                <span id="storageAvailable">Checking...</span>
-            </div>
-        </div>
 
-        <!-- Footer with links goes here -->
-        <div class="sidebar-footer">
-            <p class="sidebar-link" onclick="openLink('https://github.com/rhythmcache')">GitHub</p>
-            <p class="sidebar-link" onclick="openLink('https://t.me/rhythmcache')">Telegram</p>
+            <div class="sidebar-footer">
+                <p class="sidebar-link" onclick="openLink('https://github.com/rhythmcache')">GitHub</p>
+                <p class="sidebar-link" onclick="openLink('https://t.me/rhythmcache')">Telegram</p>
+            </div>
         </div>
     </div>
-</div>
 
     <!-- Confirm Dialog -->
     <div id="confirmDialog" class="confirm-dialog">
