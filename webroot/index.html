@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
+
     <title>PartBak</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- MMRL Styles -->
+
     <link rel="stylesheet" href="https://mui.kernelsu.org/mmrl/insets.css">
     <link rel="stylesheet" href="https://mui.kernelsu.org/mmrl/colors.css">
 
-    <!-- Your App Styles -->
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -37,10 +39,10 @@
                     <span>Detecting partitions...</span>
                 </div>
                 <div id="partitionList" class="list-container">
-                    <!-- Partitions will be loaded here -->
+
                 </div>
 
-                <!-- Selection mode indicator -->
+
                 <div id="selectionModeIndicator" class="selection-mode-indicator">
                     <div class="selection-count">
                         <span id="selectionCount">0</span> selected
@@ -50,14 +52,14 @@
                     </div>
                 </div>
 
-                <!-- Backup buttons -->
+
                 <button id="backupAllBtn" class="btn">Backup All Partitions</button>
                 <button id="backupSelectedBtn" class="btn">Backup Selected Partitions</button>
             </div>
         </div>
     </div>
 
-    <!-- Backup Status Sidebar -->
+
     <div id="sidebarBackupStatus" class="sidebar">
         <div class="sidebar-content">
             <div class="sidebar-header">
@@ -86,7 +88,7 @@
         </div>
     </div>
 
-    <!-- Confirm Dialog -->
+
     <div id="confirmDialog" class="confirm-dialog">
         <div class="dialog-content">
             <h2 id="confirmTitle">Confirm Action</h2>
@@ -98,20 +100,32 @@
         </div>
     </div>
 
-    <!-- Progress Dialog -->
-    <div id="progressDialog" class="dialog">
-        <div class="dialog-content">
-            <h2>Backup in Progress</h2>
-            <p id="currentPartition">Backing up: boot</p>
-            <div class="progress" style="text-align: center; margin: 20px 0; height: auto; background: transparent;">
-                <div class="loader"></div>
-            </div>
-            <p id="progressStatus" class="status-text">Please wait...</p>
-            <div class="btn-group">
-                <button id="cancelBackup" class="btn">Cancel</button>
-            </div>
+
+ <div id="progressDialog" class="dialog">
+    <div class="dialog-content">
+        <h2>Backup in Progress</h2>
+        <p id="currentPartition">Backing up: boot</p>
+        <div class="progress" style="text-align: center; margin: 20px 0; height: auto; background: transparent;">
+            <div class="loader"></div>
+        </div>
+        <p id="progressStatus" class="status-text">Please wait...</p>
+        <div class="btn-group">
+            <button id="cancelBackup" class="btn">Cancel</button>
         </div>
     </div>
+</div>
+
+
+ <div id="environmentDialog" class="dialog">
+    <div class="dialog-content">
+        <h2>Unsupported Environment</h2>
+        <p>ksu.exec is undefined</p>
+    
+        <div class="btn-group">
+            <button id="closeApp" class="btn btn-save">Try Again</button>
+        </div>
+    </div>
+</div>
 
     <script src="script.js"></script>
 </body>
