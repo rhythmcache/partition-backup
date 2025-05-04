@@ -31,7 +31,7 @@ html, body {
     padding-bottom: var(--window-inset-bottom, 0);
     padding-left: var(--window-inset-left, 0);
     padding-right: var(--window-inset-right, 0);
-    height: 100vh; /* Full viewport height */
+    height: 100vh;
     display: flex;
     flex-direction: column;
 }
@@ -74,16 +74,157 @@ body {
     line-height: 1.4;
 }
 
+
+/* Make the card wider */
 .container {
     width: 100%;
-    max-width: 800px;
+    max-width: 900px; /* Increased from 800px */
     padding: 16px;
     margin: 0 auto;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    height: 100%; /* Ensure the container uses full height */
+    height: 100%;
 }
+
+/* Add styling for the partition image */
+.partition-image {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+    border-radius: 50%; /* Make the image round */
+}
+
+.partition-info {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.partition-details {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.partition-action {
+    display: flex;
+    align-items: center;
+}
+
+
+/* Selection styling */
+.partition-item {
+    position: relative;
+    transition: background-color 0.2s;
+}
+
+
+
+
+.partition-item.selected .selection-checkbox {
+    background-color: #4da6ff;
+    display: flex;
+}
+
+.selection-checkbox::after {
+    content: "✓";
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* Remove the selection checkbox completely */
+.selection-checkbox {
+    display: none !important; /* Hide the checkbox completely */
+}
+
+/* Enhance the selected item styling */
+.partition-item.selected {
+    background-color: rgba(77, 166, 255, 0.15);
+    border-radius: var(--radius); /* Match the card's border radius */
+    padding-left: 10px; /* Add some padding for better visual appearance */
+    padding-right: 10px;
+    margin-left: -10px;
+    margin-right: -10px;
+    transition: background-color 0.2s, border-radius 0.2s;
+}
+
+/* Adjust spacing for partition size in selection mode */
+.partition-item.selectable .partition-size {
+    margin-right: 12px; /* Reduce the margin since we no longer need space for the checkbox */
+}
+
+/* Keep consistent spacing when selected */
+.partition-item.selected .partition-size {
+    margin-right: 12px;
+}
+
+/* Completely hide the backup button in selection mode */
+.partition-item.selectable .backup-btn {
+    display: none !important; /* Use !important to ensure it's hidden */
+    opacity: 0;
+    visibility: hidden;
+    position: absolute; /* Remove from layout flow */
+}
+
+
+
+/* Selection mode indicator */
+.selection-mode-indicator {
+    background-color: rgba(77, 166, 255, 0.9);
+    color: white;
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+    display: none;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.selection-mode-indicator.active {
+    display: flex;
+}
+
+.selection-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.selection-count {
+    font-weight: 500;
+}
+
+/* Backup selected button */
+#backupSelectedBtn {
+    background: #4da6ff;
+    width: 100%;
+    margin-top: 12px;
+    padding: 10px;
+    font-weight: bold;
+    display: none;
+}
+
+#backupSelectedBtn.active {
+    display: block;
+}
+/* */
+
+.partition-action {
+    display: flex;
+    align-items: center;
+}
+
+/* Make the backup button slightly bigger */
+.backup-btn {
+    background: #4da6ff;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
 
 .card {
     background: var(--card-bg);
@@ -192,7 +333,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 0;
+    padding: 12px 0;
     border-bottom: 1px solid var(--border);
 }
 
@@ -206,6 +347,8 @@ body {
 
 .partition-name {
     font-weight: 500;
+    font-size: 15px;
+    margin-bottom: 2px;
 }
 
 .partition-path {
@@ -216,11 +359,11 @@ body {
 }
 
 .partition-size {
-    font-size: 11px;
+    font-size: 12px;
     background: rgba(255, 255, 255, 0.1);
-    padding: 2px 6px;
-    border-radius: 10px;
-    margin-right: 10px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    margin-right: 12px;
 }
 
 .btn-group {
