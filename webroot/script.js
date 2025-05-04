@@ -1,6 +1,8 @@
 let isEnvironmentSupported = false;
 let partitionsFound = [];
 let filteredPartitions = [];
+let isSelectionMode = false;
+let selectedPartitions = [];
 
 function getUniqueCallbackName(prefix) {
     return `${prefix}_${Math.random().toString(36).substr(2, 9)}`;
@@ -127,9 +129,15 @@ async function getPartitions(basePath) {
     return result;
 }
 
-async function backupPartition(partition) {
+async function backupPartition(partition, isMultiBackup = false, currentIndex = 0, totalCount = 1) {
     try {
-        showProgressDialog(partition.name);
+        // Only show the dialog if it's not already visible in a multi-backup scenario
+        if (!isMultiBackup || currentIndex === 0) {
+            showProgressDialog(partition.name, isMultiBackup, currentIndex, totalCount);
+        } else {
+            // Just update the current partition info
+            updateProgressDialogInfo(partition.name, currentIndex, totalCount);
+        }
         
         // Create the backup directory if it doesn't exist
         await exec('mkdir -p /storage/emulated/0/Backups');
@@ -147,12 +155,26 @@ async function backupPartition(partition) {
         const result = await exec(ddCommand);
         
         if (result.errno === 0) {
-            document.getElementById('progressStatus').textContent = "Backup completed successfully!";
-            setTimeout(() => {
-                closeProgressDialog();
-                alert(`Successfully backed up ${partition.name} to ${backupFile}`);
+            document.getElementById('progressStatus').textContent = isMultiBackup ? 
+                `Completed ${currentIndex + 1} of ${totalCount} partitions` : 
+                "Backup completed successfully!";
+            
+            if (!isMultiBackup) {
+                setTimeout(() => {
+                    closeProgressDialog();
+                    alert(`Successfully backed up ${partition.name} to ${backupFile}`);
+                    updateLastBackup();
+                }, 1000);
+            } else {
                 updateLastBackup();
-            }, 1000);
+                // Only close dialog when all partitions are backed up
+                if (currentIndex === totalCount - 1) {
+                    setTimeout(() => {
+                        closeProgressDialog();
+                        alert("All partitions backup completed!");
+                    }, 1000);
+                }
+            }
         } else {
             throw new Error(`dd command failed: ${result.stderr}`);
         }
@@ -167,6 +189,38 @@ async function backupPartition(partition) {
     }
 }
 
+function updateProgressDialogInfo(partitionName, currentIndex, totalCount) {
+    document.getElementById('currentPartition').textContent = `Backing up: ${partitionName}`;
+    document.getElementById('progressStatus').textContent = `Progress: ${currentIndex + 1} of ${totalCount} partitions`;
+}
+
+// Update the showProgressDialog function to display multi-backup info
+function showProgressDialog(partitionName, isMultiBackup = false, currentIndex = 0, totalCount = 1) {
+    const dialog = document.getElementById('progressDialog');
+    
+    if (isMultiBackup) {
+        document.getElementById('currentPartition').textContent = `Backing up: ${partitionName}`;
+        document.getElementById('progressStatus').textContent = `Progress: ${currentIndex + 1} of ${totalCount} partitions`;
+    } else {
+        document.getElementById('currentPartition').textContent = `Backing up: ${partitionName}`;
+        document.getElementById('progressStatus').textContent = 'Starting backup...';
+    }
+    
+    document.getElementById('cancelBackup').onclick = () => {
+        // Add logic to cancel the backup process
+        exec('pkill dd').then(() => {
+            alert('Backup cancelled');
+            dialog.style.display = 'none';
+        }).catch(error => {
+            console.error('Error cancelling backup:', error);
+            alert('Failed to cancel backup');
+        });
+    };
+    
+    dialog.style.display = 'flex';
+}
+
+
 async function backupAllPartitions() {
     const partitionsToBackup = filteredPartitions.length > 0 ? filteredPartitions : partitionsFound;
     
@@ -179,11 +233,12 @@ async function backupAllPartitions() {
                 parseInt(a.sizeBytes) - parseInt(b.sizeBytes)
             );
             
-            for (const partition of sortedPartitions) {
-                await backupPartition(partition);
+            // Use a loop that passes multi-backup flag and index information
+            for (let i = 0; i < sortedPartitions.length; i++) {
+                await backupPartition(sortedPartitions[i], true, i, sortedPartitions.length);
             }
             
-            alert("All partitions backup completed!");
+            // No need for an alert here as the last backupPartition call will show it
         }
     );
 }
@@ -242,27 +297,88 @@ function renderPartitionList(partitionsToRender) {
     partitionsToRender.forEach(partition => {
         const partitionElement = document.createElement('div');
         partitionElement.className = 'partition-item';
+        if (isSelectionMode) {
+            partitionElement.classList.add('selectable');
+            
+            // Check if this partition is in the selectedPartitions array
+            const isSelected = selectedPartitions.some(p => p.name === partition.name);
+            if (isSelected) {
+                partitionElement.classList.add('selected');
+            }
+        }
         
         partitionElement.innerHTML = `
             <div class="partition-info">
-                <div class="partition-name">${partition.name}</div>
-                <div class="partition-path">${partition.path}</div>
+                <img src="logo.png" alt="IMG" class="partition-image">
+                <div>
+                    <div class="partition-name">${partition.name}</div>
+                    <div class="partition-path">${partition.path}</div>
+                </div>
             </div>
             <div class="partition-action">
                 <span class="partition-size">${partition.size}</span>
-                <button class="btn btn-small backup-btn">Backup</button>
+                ${isSelectionMode ? '' : '<button class="btn btn-small backup-btn">Backup</button>'}
+                <div class="selection-checkbox"></div>
             </div>
         `;
         
         partitionListElement.appendChild(partitionElement);
         
-        const backupButton = partitionElement.querySelector('.backup-btn');
-        backupButton.addEventListener('click', () => {
-            showConfirmDialog(
-                "Backup Partition",
-                `Are you sure you want to backup the ${partition.name} partition?`,
-                () => backupPartition(partition)
-            );
+        // Setup backup button click only if not in selection mode
+        if (!isSelectionMode) {
+            const backupButton = partitionElement.querySelector('.backup-btn');
+            backupButton.addEventListener('click', () => {
+                showConfirmDialog(
+                    "Backup Partition",
+                    `Are you sure you want to backup the ${partition.name} partition?`,
+                    () => backupPartition(partition)
+                );
+            });
+        }
+        
+        // Setup long press and click for selection
+        let longPressTimer;
+        
+        partitionElement.addEventListener('touchstart', (e) => {
+            longPressTimer = setTimeout(() => {
+                if (!isSelectionMode) {
+                    toggleSelectionMode(true);
+                }
+                toggleItemSelection(partitionElement, partition);
+            }, 500); // 500ms for long press
+        });
+        
+        partitionElement.addEventListener('touchend', () => {
+            clearTimeout(longPressTimer);
+        });
+        
+        partitionElement.addEventListener('touchmove', () => {
+            clearTimeout(longPressTimer);
+        });
+        
+        // For desktop/debugging
+        partitionElement.addEventListener('mousedown', (e) => {
+            longPressTimer = setTimeout(() => {
+                if (!isSelectionMode) {
+                    toggleSelectionMode(true);
+                }
+                toggleItemSelection(partitionElement, partition);
+            }, 500);
+        });
+        
+        partitionElement.addEventListener('mouseup', () => {
+            clearTimeout(longPressTimer);
+        });
+        
+        partitionElement.addEventListener('mouseleave', () => {
+            clearTimeout(longPressTimer);
+        });
+        
+        // Click handling in selection mode
+        partitionElement.addEventListener('click', () => {
+            if (isSelectionMode) {
+                toggleItemSelection(partitionElement, partition);
+            }
         });
     });
 }
@@ -300,6 +416,94 @@ function setupSearchBar() {
     searchInput.addEventListener('input', (e) => {
         filterPartitions(e.target.value);
     });
+}
+
+function toggleSelectionMode(enable) {
+    isSelectionMode = enable;
+    
+    const selectionIndicator = document.getElementById('selectionModeIndicator');
+    const backupAllBtn = document.getElementById('backupAllBtn');
+    const backupSelectedBtn = document.getElementById('backupSelectedBtn');
+    
+    if (enable) {
+        selectionIndicator.classList.add('active');
+        backupAllBtn.style.display = 'none';
+        backupSelectedBtn.style.display = 'block';
+        
+        // Add selectable class to all partition items
+        document.querySelectorAll('.partition-item').forEach(item => {
+            item.classList.add('selectable');
+        });
+    } else {
+        selectionIndicator.classList.remove('active');
+        backupAllBtn.style.display = 'block';
+        backupSelectedBtn.style.display = 'none';
+        
+        // Remove selectable class and selected class from all items
+        document.querySelectorAll('.partition-item').forEach(item => {
+            item.classList.remove('selectable', 'selected');
+        });
+        
+        // Clear selection
+        selectedPartitions = [];
+        updateSelectionCount();
+    }
+}
+
+function toggleItemSelection(partitionElement, partition) {
+    const isSelected = partitionElement.classList.toggle('selected');
+    
+    if (isSelected) {
+        selectedPartitions.push(partition);
+    } else {
+        const index = selectedPartitions.findIndex(p => p.name === partition.name);
+        if (index !== -1) {
+            selectedPartitions.splice(index, 1);
+        }
+    }
+    
+    updateSelectionCount();
+    
+    // Exit selection mode if no items are selected
+    if (selectedPartitions.length === 0) {
+        toggleSelectionMode(false);
+    }
+}
+
+function updateSelectionCount() {
+    const countElement = document.getElementById('selectionCount');
+    countElement.textContent = selectedPartitions.length;
+    
+    // Show/hide backup selected button
+    const backupSelectedBtn = document.getElementById('backupSelectedBtn');
+    backupSelectedBtn.classList.toggle('active', selectedPartitions.length > 0);
+}
+
+// Add this function to backup selected partitions
+async function backupSelectedPartitions() {
+    if (selectedPartitions.length === 0) {
+        alert('No partitions selected');
+        return;
+    }
+    
+    showConfirmDialog(
+        "Backup Selected Partitions",
+        `Are you sure you want to backup ${selectedPartitions.length} selected partition(s)?`,
+        async () => {
+            // Sort partitions by size (smallest first)
+            const sortedPartitions = [...selectedPartitions].sort((a, b) => 
+                parseInt(a.sizeBytes) - parseInt(b.sizeBytes)
+            );
+            
+            // Use a loop that passes multi-backup flag and index information
+            for (let i = 0; i < sortedPartitions.length; i++) {
+                await backupPartition(sortedPartitions[i], true, i, sortedPartitions.length);
+            }
+            
+            // The last partition backup will handle the dialog closing
+            toggleSelectionMode(false);
+        }
+    );
 }
 
 async function init() {
@@ -341,6 +545,9 @@ async function init() {
         
         // Setup backup all button
         document.getElementById('backupAllBtn').addEventListener('click', backupAllPartitions);
+        
+        document.getElementById('cancelSelectionBtn').addEventListener('click', () => toggleSelectionMode(false));
+        document.getElementById('backupSelectedBtn').addEventListener('click', backupSelectedPartitions);
         
     } catch (error) {
         console.error('Initialization error:', error);
