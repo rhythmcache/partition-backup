@@ -15,7 +15,6 @@ function getUniqueCallbackName(prefix) {
 
 
 
-
 function showEnvironmentDialog() {
     const dialog = document.getElementById('environmentDialog');
     dialog.style.display = 'flex';
@@ -27,7 +26,6 @@ function showEnvironmentDialog() {
         element.style.pointerEvents = 'none';
     });
 }
-
 
 
 
@@ -47,6 +45,7 @@ async function exec(command) {
     });
 }
 
+
 function setupInactiveSlotToggle() {
     const toggleCheckbox = document.getElementById('hideInactiveToggle');
     toggleCheckbox.addEventListener('change', function() {
@@ -54,6 +53,7 @@ function setupInactiveSlotToggle() {
         applyPartitionFilter();
     });
 }
+
 
 async function checkDynamicPartitions() {
     try {
@@ -81,8 +81,6 @@ async function checkDynamicPartitions() {
         document.getElementById('dynamicPartitionSection').style.display = 'none';
     }
 }
-
-
 
 
 
@@ -121,11 +119,9 @@ function showProgressDialog(partitionName) {
 
 
 
-
 function closeProgressDialog() {
     document.getElementById('progressDialog').style.display = 'none';
 }
-
 
 
 
@@ -160,7 +156,6 @@ async function findBootPartitionLocation() {
 
 
 
-
 async function getPartitions(basePath) {
     if (!basePath) return [];   
     const { stdout: partitionsList } = await exec(`ls -1 ${basePath}`);
@@ -185,6 +180,8 @@ async function getPartitions(basePath) {
     return result;
 }
 
+
+
 function generateMD5ForFile(filePath, callback) {
     const command = `md5sum "${filePath}" | awk '{print $1}'`;
     ksu.exec(command, function (code, stdout, stderr) {
@@ -206,7 +203,6 @@ function generateMD5ForFile(filePath, callback) {
         }
     });
 }
-
 
 
 
@@ -270,8 +266,6 @@ async function backupPartition(partition, isMultiBackup = false, currentIndex = 
 }
 
 
-
-
 function updateProgressDialogInfo(partitionName, currentIndex, totalCount) {
     document.getElementById('currentPartition').textContent = `Backing up: ${partitionName}`;
     document.getElementById('progressStatus').textContent = `Progress: ${currentIndex + 1} of ${totalCount} partitions`;
@@ -299,7 +293,6 @@ function showProgressDialog(partitionName, isMultiBackup = false, currentIndex =
     };
     dialog.style.display = 'flex';
 }
-
 
 
 async function backupAllPartitions() {
@@ -333,7 +326,6 @@ async function updateStorageInfo() {
 }
 
 
-
 async function updateLastBackup() {
     try {
         const { stdout: lastBackupFile } = await exec('ls -t /storage/emulated/0/Backups/*.img 2>/dev/null | head -1');
@@ -349,7 +341,6 @@ async function updateLastBackup() {
         document.getElementById('lastBackup').textContent = 'Error';
     }
 }
-
 
 
 function filterPartitions(searchTerm) {
@@ -370,13 +361,10 @@ function filterPartitions(searchTerm) {
 }
 
 
-
 function applyPartitionFilter() {
     const searchTerm = document.getElementById('searchInput').value;
     filterPartitions(searchTerm);
 }
-
-
 
 
 function renderPartitionList(partitionsToRender) {
@@ -462,7 +450,6 @@ function renderPartitionList(partitionsToRender) {
 
 
 
-
 function setupSidebar() {
     const menuIcon = document.getElementById('menuIcon');
     const closeSidebar = document.getElementById('closeSidebar');
@@ -486,14 +473,12 @@ function setupSidebar() {
 
 
 
-
 function setupSearchBar() {
     const searchInput = document.getElementById('searchInput');
     searchInput.addEventListener('input', (e) => {
         filterPartitions(e.target.value);
     });
 }
-
 
 
 
@@ -523,7 +508,6 @@ function toggleSelectionMode(enable) {
 
 
 
-
 function toggleItemSelection(partitionElement, partition) {
     const isSelected = partitionElement.classList.toggle('selected');  
     if (isSelected) {
@@ -541,14 +525,12 @@ function toggleItemSelection(partitionElement, partition) {
 }
 
 
-
 function updateSelectionCount() {
     const countElement = document.getElementById('selectionCount');
     countElement.textContent = selectedPartitions.length;
     const backupSelectedBtn = document.getElementById('backupSelectedBtn');
     backupSelectedBtn.classList.toggle('active', selectedPartitions.length > 0);
 }
-
 
 
 async function backupSelectedPartitions() {
@@ -570,7 +552,6 @@ async function backupSelectedPartitions() {
         }
     );
 }
-
 
 
     async function init() {
@@ -613,8 +594,6 @@ async function backupSelectedPartitions() {
 }
 
 
-
-
 function openLink(url) {
             if (typeof ksu !== 'undefined' && ksu.exec) {
                 ksu.exec(`am start -a android.intent.action.VIEW -d "${url}"`, '{}', 'openLink_callback');
@@ -624,6 +603,4 @@ function openLink(url) {
         }
 
         
-        
-
 window.addEventListener('load', init);
