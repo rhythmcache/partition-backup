@@ -109,14 +109,13 @@ backup_partition() {
 		[ "$QUIET" != "true" ] && echo "Warning: Overwriting existing backup file: $backup_file"
 	fi
 	if dd if="$actual_path" of="$backup_file" bs=4M 2>/dev/null; then
-		[ "$QUIET" != "true" ] && echo "Successfully backed up $partition_name to $backup_file"
+		[ "$QUIET" != "true" ] && echo "Success"
 		local size
 		size_bytes=$(stat -c %s "$backup_file")
 		size=$(format_size "$size_bytes")
 		[ "$QUIET" != "true" ] && echo "Backup size: $size"
-		[ "$QUIET" != "true" ] && echo "Calculating MD5 checksum..."
+		[ "$QUIET" != "true" ] && echo "Generating checksum..."
 		md5sum "$backup_file" >"$backup_file.md5"
-		[ "$QUIET" != "true" ] && echo "MD5 checksum saved to $backup_file.md5"
 		return 0
 	else
 		echo "Error backing up $partition_name"
