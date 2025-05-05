@@ -16,13 +16,13 @@ Usage: $(basename "$0") COMMAND [OPTIONS]
 
 Commands:
   list                         List all available partitions
-  backup PARTITION [PARTITION] Backup specified partition(s)
+  backup PARTITION             Backup specified partition(s)
   info                         Show device information
 
 Options:
   -h, --help                   Show this help message
   -v, --version                Show version information
-  -q, --quiet                  Quiet mode, display only errors
+  -q, --quiet                  Quiet mode
 
 EOF
 }
@@ -37,6 +37,20 @@ check_root() {
 	if [ "$(id -u)" -ne 0 ]; then
 		echo "Error: This script requires root access. Please run with su or as root."
 		exit 1
+	fi
+}
+
+# Function to format bytes into human-readable sizes
+format_size() {
+	local bytes="$1"
+	if [ "$bytes" -ge 1073741824 ]; then
+		echo "$(echo "scale=2; $bytes/1073741824" | bc) GB"
+	elif [ "$bytes" -ge 1048576 ]; then
+		echo "$(echo "scale=2; $bytes/1048576" | bc) MB"
+	elif [ "$bytes" -ge 1024 ]; then
+		echo "$(echo "scale=2; $bytes/1024" | bc) KB"
+	else
+		echo "$bytes B"
 	fi
 }
 
@@ -102,7 +116,8 @@ backup_partition() {
 	if dd if="$actual_path" of="$backup_file" bs=4M 2>/dev/null; then
 		[ "$QUIET" != "true" ] && echo "Successfully backed up $partition_name to $backup_file"
 		local size
-		size="$(stat -c %s "$backup_file" | numfmt --to=iec)"
+		size_bytes=$(stat -c %s "$backup_file")
+		size=$(format_size "$size_bytes")
 		[ "$QUIET" != "true" ] && echo "Backup size: $size"
 		[ "$QUIET" != "true" ] && echo "Calculating MD5 checksum..."
 		md5sum "$backup_file" >"$backup_file.md5"
@@ -136,15 +151,7 @@ list_partitions() {
 				if command -v blockdev >/dev/null 2>&1; then
 					size_bytes=$(blockdev --getsize64 "$path" 2>/dev/null)
 					if [ -n "$size_bytes" ]; then
-						if [ "$size_bytes" -ge 1073741824 ]; then
-							size=$(echo "scale=2; $size_bytes/1073741824" | bc)" GB"
-						elif [ "$size_bytes" -ge 1048576 ]; then
-							size=$(echo "scale=2; $size_bytes/1048576" | bc)" MB"
-						elif [ "$size_bytes" -ge 1024 ]; then
-							size=$(echo "scale=2; $size_bytes/1024" | bc)" KB"
-						else
-							size="$size_bytes B"
-						fi
+						size=$(format_size "$size_bytes")
 					fi
 				fi
 				printf "%-20s %-12s %-s\n" "$partition" "$size" "$path"
@@ -244,8 +251,7 @@ main() {
 		shift
 	done
 
-	# Check root access
-	# check_root
+	check_root
 
 	# Create backup directory if it doesn't exist
 	if [ "$COMMAND" = "backup" ]; then
@@ -271,16 +277,6 @@ main() {
 			exit 1
 		fi
 
-		# Create a backup info file
-		BACKUP_INFO="$BACKUP_DIR/backup_info_${DATE_STAMP}.txt"
-		echo "Android Partition Backup - $DATE_STAMP" >"$BACKUP_INFO"
-		echo "Device: $(getprop ro.product.model 2>/dev/null || echo "Unknown") ($(getprop ro.product.device 2>/dev/null || echo "Unknown"))" >>"$BACKUP_INFO"
-		echo "Android version: $(getprop ro.build.version.release 2>/dev/null || echo "Unknown")" >>"$BACKUP_INFO"
-		echo "Build number: $(getprop ro.build.display.id 2>/dev/null || echo "Unknown")" >>"$BACKUP_INFO"
-		echo "Partition directory: $PARTITION_DIR" >>"$BACKUP_INFO"
-		echo "" >>"$BACKUP_INFO"
-		echo "Backed up partitions:" >>"$BACKUP_INFO"
-
 		success_count=0
 		total_count=0
 
@@ -297,15 +293,11 @@ main() {
 			total_count=$((total_count + 1))
 			if backup_partition "$partition"; then
 				success_count=$((success_count + 1))
-				echo "- $partition: SUCCESS" >>"$BACKUP_INFO"
-			else
-				echo "- $partition: FAILED" >>"$BACKUP_INFO"
 			fi
 		done
 
 		[ "$QUIET" != "true" ] && echo ""
 		[ "$QUIET" != "true" ] && echo "Backed up: $success_count/$total_count"
-		[ "$QUIET" != "true" ] && echo "Info: $BACKUP_INFO"
 
 		if [ "$success_count" -ne "$total_count" ]; then
 			echo "Some backups failed."
@@ -320,4 +312,3 @@ main() {
 
 # Execute main function
 main "$@"
-exit 0
