@@ -17,7 +17,6 @@ Usage: $(basename "$0") COMMAND [OPTIONS]
 Commands:
   list                         List all available partitions
   backup PARTITION             Backup specified partition(s)
-  info                         Show device information
 
 Options:
   -h, --help                   Show this help message
@@ -160,31 +159,6 @@ list_partitions() {
 	done
 }
 
-# Function to show device information
-show_device_info() {
-	echo "Android Device Information:"
-	echo "--------------------------------------------------"
-	echo "Model:          $(getprop ro.product.model 2>/dev/null || echo "Unknown")"
-	echo "Device:         $(getprop ro.product.device 2>/dev/null || echo "Unknown")"
-	echo "Board:          $(getprop ro.product.board 2>/dev/null || echo "Unknown")"
-	echo "Android:        $(getprop ro.build.version.release 2>/dev/null || echo "Unknown")"
-	echo "Build:          $(getprop ro.build.display.id 2>/dev/null || echo "Unknown")"
-	echo "Kernel:         $(uname -r 2>/dev/null || echo "Unknown")"
-	echo "Architecture:   $(uname -m 2>/dev/null || echo "Unknown")"
-	echo "--------------------------------------------------"
-
-	# Find and display partition directory
-	if [ -z "$PARTITION_DIR" ]; then
-		find_partition_dir >/dev/null 2>&1
-	fi
-
-	if [ -n "$PARTITION_DIR" ]; then
-		echo "Partition directory: $PARTITION_DIR"
-	else
-		echo "Partition directory: Not found"
-	fi
-}
-
 # Main function to process arguments
 main() {
 	# Default values
@@ -276,7 +250,6 @@ main() {
 			echo "Try '$(basename "$0") backup PARTITION [PARTITION...]'"
 			exit 1
 		fi
-
 		success_count=0
 		total_count=0
 
@@ -302,11 +275,6 @@ main() {
 		if [ "$success_count" -ne "$total_count" ]; then
 			echo "Some backups failed."
 		fi
-
-		;;
-	info)
-		show_device_info
-		;;
 	esac
 }
 
