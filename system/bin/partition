@@ -55,18 +55,15 @@ format_size() {
 
 # Function to find partition directory
 find_partition_dir() {
-	[ "$QUIET" != "true" ] && echo "Searching for partition directory..."
 
 	# Check first location
 	if [ -d "/dev/block/by-name" ] && ls /dev/block/by-name/boot* >/dev/null 2>&1; then
-		[ "$QUIET" != "true" ] && echo "Found partitions in /dev/block/by-name/"
 		PARTITION_DIR="/dev/block/by-name"
 		return 0
 	fi
 
 	# Check second location
 	if [ -d "/dev/block/bootdevice/by-name" ] && ls /dev/block/bootdevice/by-name/boot* >/dev/null 2>&1; then
-		[ "$QUIET" != "true" ] && echo "Found partitions in /dev/block/bootdevice/by-name/"
 		PARTITION_DIR="/dev/block/bootdevice/by-name"
 		return 0
 	fi
@@ -77,7 +74,6 @@ find_partition_dir() {
 		if [ -n "$BOOT_DEVICE" ]; then
 			PLATFORM_DIR="/dev/block/platform/$BOOT_DEVICE/by-name"
 			if [ -d "$PLATFORM_DIR" ] && ls "$PLATFORM_DIR"/boot* >/dev/null 2>&1; then
-				[ "$QUIET" != "true" ] && echo "Found partitions in $PLATFORM_DIR"
 				PARTITION_DIR="$PLATFORM_DIR"
 				return 0
 			fi
@@ -104,7 +100,7 @@ backup_partition() {
 	local actual_path
 	actual_path="$(readlink -f "$partition_path")"
 	if [ ! -e "$actual_path" ]; then
-		echo "Error: Could not resolve actual path for $partition_name."
+		echo "Error: Could not resolve path for $partition_name."
 		return 1
 	fi
 	[ "$QUIET" != "true" ] && echo "Backing up $partition_name partition from $actual_path..."
