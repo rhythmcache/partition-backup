@@ -20,7 +20,7 @@ elif [ "${MAGISK_VER_CODE}" ]; then
 fi    
             
  busybox=${bin_dir}/busybox
-[ ! -f "/system/bin/bc" ] && cp "$MODPATH/bins/bc-$(getprop ro.product.cpu.abi)" "$MODPATH/system/bin/bc"
+[ ! -f "/system/bin/bc" ] && cp "$MODPATH/bc/bc-$(getprop ro.product.cpu.abi)" "$MODPATH/system/bin/bc"
 
 [ ! -f "/system/bin/blockdev" ] && ln -s "${busybox}" "${MODPATH}/system/bin/blockdev"
 
