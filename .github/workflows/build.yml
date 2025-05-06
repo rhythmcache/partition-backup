@@ -1,10 +1,6 @@
 name: Build
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -148,12 +144,10 @@ jobs:
             sed -i '/^updateJson=/d' module.prop
             
             echo "MODULE_VERSION=gh-actions-${{ steps.get_commit.outputs.SHORT_SHA }}" >> $GITHUB_ENV
-          else
-            echo "Note: module.prop not found, continuing without updating version."
           fi
           
           # Remove .github folder from output
-          rm -rf .github
+          rm -rf .github README.md temp_binaries
           
           # List contents for verification
           echo "Repository contents:"
@@ -162,10 +156,6 @@ jobs:
           echo "Contents of bc directory:"
           ls -la bc/
           
-          if [ -f module.prop ]; then
-            echo "Contents of module.prop:"
-            cat module.prop
-          fi
       
       - name: Upload package
         uses: actions/upload-artifact@v4
