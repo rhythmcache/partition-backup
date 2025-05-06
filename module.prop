@@ -1,5 +1,5 @@
-id=partbak
-name=PartBak
+id=partition-backup
+name=Partition Backup
 version=1.0.0
 versionCode=1
 author=rhythmcache.t.me
