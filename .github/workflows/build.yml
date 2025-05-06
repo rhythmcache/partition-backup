@@ -31,7 +31,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      - name: Install Build Dependencies
+      - name: Install Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential autoconf automake libtool bison flex texinfo
@@ -42,25 +42,23 @@ jobs:
           ndk-version: r27c
           add-to-path: true
       
-      - name: Download and extract BC source
+      - name: Download BC source
         run: |
           wget https://ftp.wayne.edu/gnu/bc/bc-1.08.1.tar.xz
           tar -xf bc-1.08.1.tar.xz
           cd bc-1.08.1
-          
-          # Apply patching if needed for Android compatibility
-          # (No patches needed for this version, but would go here)
+        
       
-      - name: Configure and Build BC for ${{ matrix.arch }}
+      - name: Build BC for ${{ matrix.arch }}
         run: |
           cd bc-1.08.1
           
-          # Set up environment variables
+          
           export ANDROID_NDK_HOME=$ANDROID_NDK_ROOT
           export TOOLCHAIN=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64
           export PATH=$TOOLCHAIN/bin:$PATH
           
-          # Create necessary symlinks for toolchain compatibility
+          
           case "${{ matrix.arch }}" in
             aarch64)
               sudo ln -sf $TOOLCHAIN/bin/aarch64-linux-android21-clang $TOOLCHAIN/bin/aarch64-linux-android-gcc
@@ -76,25 +74,25 @@ jobs:
               ;;
           esac
           
-          # Set compiler flags for optimization
+          
           export CFLAGS="-Os -ffunction-sections -fdata-sections -fomit-frame-pointer -flto -DANDROID -D__ANDROID_API__=21"
           export LDFLAGS="-Wl,--gc-sections -flto"
           
-          # Run autoconf to generate configure script
+          
           autoreconf -fi
           
-          # Configure with appropriate host target and compiler
+          
           ./configure --host=${{ matrix.host }} --prefix=/usr --with-readline=no --disable-nls
           
-          # Build
+          
           make -j$(nproc)
           
           $TOOLCHAIN/bin/llvm-strip --strip-all bc/bc
           
-          # Check binary size
+          
           ls -lh bc/bc
           
-          # Create output directory
+          
           mkdir -p ../output
           cp bc/bc ../output/${{ matrix.output_name }}
       
@@ -112,49 +110,45 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         
-      - name: Download all artifacts
+      - name: Download
         uses: actions/download-artifact@v4
         with:
           path: temp_binaries
           
-      - name: Get short commit SHA
+      - name: Get short SHA
         id: get_commit
         run: echo "SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
         
       - name: Setup repository structure
         run: |
-          # Create bc directory at the root of the repo
+          
           mkdir -p bc
           
-          # Copy binaries with their correct names to the bc folder
+          
           cp temp_binaries/bc-aarch64-binary/bc-arm64-v8a bc/
           cp temp_binaries/bc-armv7a-binary/bc-armeabi-v7a bc/
           cp temp_binaries/bc-x86_64-binary/bc-x86_64 bc/
           cp temp_binaries/bc-i686-binary/bc-x86 bc/
           
-          # Make binaries executable
+          
           chmod +x bc/*
           
-          # Update module.prop version string
+          
           if [ -f module.prop ]; then
-            # Update version with gh-actions-{commit}
+            
             sed -i "s/^version=.*/version=gh-actions-${{ steps.get_commit.outputs.SHORT_SHA }}/" module.prop
             
-            # Remove updateJson line if present
-            sed -i '/^updateJson=/d' module.prop
             
             echo "MODULE_VERSION=gh-actions-${{ steps.get_commit.outputs.SHORT_SHA }}" >> $GITHUB_ENV
           fi
           
-          # Remove .github folder from output
+          
           rm -rf .github README.md temp_binaries
           
-          # List contents for verification
+          
           echo "Repository contents:"
           find . -type f -not -path "./.git/*" | sort
-          
-          echo "Contents of bc directory:"
-          ls -la bc/
+        
           
       
       - name: Upload package
