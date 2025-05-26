@@ -18,9 +18,10 @@ elif [ "${MAGISK_VER_CODE}" ]; then
     ui_print "- Magisk: ${MAGISK_VER} │ ${MAGISK_VER_CODE}"
     bin_dir="/data/adb/magisk"
 fi    
+
+mkdir -p "${MODPATH}/system/bin
             
- busybox=${bin_dir}/busybox
-[ ! -f "/system/bin/bc" ] && cp "$MODPATH/bc/bc-$(getprop ro.product.cpu.abi)" "$MODPATH/system/bin/bc"
+[ -f "${bin_dir}/busybox" ] && busybox="${bin_dir}/busybox"
 
 [ ! -f "/system/bin/blockdev" ] && ln -s "${busybox}" "${MODPATH}/system/bin/blockdev"
 
@@ -41,5 +42,8 @@ done
 
 
 [ -z "$found" ] && abort "- couldn't detect partitions. Aborting Installation"
+
+cp "${MODPATH}/bins/partition-${getprop ro.product.cpu.abi}" "${MODPATH}/system/bin/partition"
+
 set_perm_recursive "$MODPATH" 0 0 0755 0644
 chmod +x "$MODPATH/system/bin/partition"
