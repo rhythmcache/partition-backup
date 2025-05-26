@@ -11,12 +11,13 @@ mkdir -p "$OUT_DIR"
 
 CFLAGS="-Os -flto -fomit-frame-pointer -fdata-sections -ffunction-sections -Wl,--gc-sections -static"
 
-
+export PATH="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin":$PATH
+           
 archs=(
-    "aarch64-linux-android-clang"
-    "armv7a-linux-androideabi-clang"
-    "i686-linux-android-clang"
-    "x86_64-linux-android-clang"
+    "aarch64-linux-android${API}-clang"
+    "armv7a-linux-androideabi${API}-clang"
+    "i686-linux-android${API}-clang"
+    "x86_64-linux-android${API}-clang"
 )
 
 names=("arm64-v8a" "armeabi-v7a" "x86" "x86_64")
@@ -27,6 +28,5 @@ for i in {0..3}; do
     llvm-strip --strip-all "$OUT_DIR/partition-${names[i]}"
 done
 
-# Create zip in module directory
 echo "Creating zip..."
 cd "$MODULE_DIR" && zip -r9 ../partition-backup.zip *
