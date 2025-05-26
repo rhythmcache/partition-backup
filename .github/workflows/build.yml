@@ -9,13 +9,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-
       - name: Install Compiler
         uses: nttld/setup-ndk@v1
         with:
           ndk-version: r27c
           add-to-path: true
-
 
       - name: Build binaries
         run: |
@@ -27,10 +25,9 @@ jobs:
       - name: Get hash
         id: commit
         run: echo "hash=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
-             mv partition-backup.zip "partition-module-${{ steps.commit.outputs.hash }}.zip"
 
       - name: Upload Module
         uses: actions/upload-artifact@v4
         with:
-          name: partition-module
-          path: partition-module-${{ steps.commit.outputs.hash }}.zip
+          name: partition-module-${{ steps.commit.outputs.hash }}
+          path: module/
