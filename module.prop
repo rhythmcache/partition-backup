@@ -1,8 +1,0 @@
-id=partition-backup
-name=Partition Backup
-version=1.0.0
-versionCode=1
-author=rhythmcache.t.me
-description=CLI utility to list and backup Android device partitions.
-updateJson=https://raw.githubusercontent.com/rhythmcache/partbak/main/updateJson
-
