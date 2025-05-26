@@ -28,7 +28,7 @@ jobs:
              mv partition-backup.zip "partition-module-${{ steps.commit.outputs.hash }}.zip"
 
       - name: Upload Module
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: partition-module
           path: partition-module-${{ steps.commit.outputs.hash }}.zip
