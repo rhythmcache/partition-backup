@@ -1,0 +1,34 @@
+name: Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+
+      - name: Install Compiler
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r27c
+          add-to-path: true
+
+
+      - name: Build binaries
+        run: |
+          chmod +x build.sh
+          ./build.sh
+          
+      - name: Get hash
+        id: commit
+        run: echo "hash=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+             mv partition-backup.zip "partition-module-${{ steps.commit.outputs.hash }}.zip"
+
+      - name: Upload Module
+        uses: actions/upload-artifact@v3
+        with:
+          name: partition-module
+          path: partition-module-${{ steps.commit.outputs.hash }}.zip
