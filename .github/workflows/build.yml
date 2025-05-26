@@ -19,8 +19,10 @@ jobs:
 
       - name: Build binaries
         run: |
-          chmod +x $(pwd)/build.sh
-          bash $(pwd)/build.sh
+           echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME" >> $GITHUB_ENV
+           echo "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
+           chmod +x $(pwd)/build.sh
+           bash $(pwd)/build.sh
           
       - name: Get hash
         id: commit
