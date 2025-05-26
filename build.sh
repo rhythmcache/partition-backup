@@ -9,7 +9,7 @@ API=21
 mkdir -p "$OUT_DIR"
 
 
-CFLAGS="-Os -flto -fomit-frame-pointer -fdata-sections -ffunction-sections -Wl,--gc-sections -static"
+CFLAGS="-Os -flto -fomit-frame-pointer -fdata-sections -ffunction-sections -Wl,--gc-sections"
 
 export PATH="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin":$PATH
            
