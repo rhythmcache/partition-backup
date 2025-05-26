@@ -54,6 +54,16 @@
     z-index: 1000;
     }
 
+    .status-item span:last-child {
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+    vertical-align: middle;
+    }
+
+
 
     .dialog-content {
     background: var(--card-bg);
