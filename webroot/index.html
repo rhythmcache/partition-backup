@@ -59,7 +59,7 @@
             <div class="sidebar-body">
                 <div class="status-item">
                     <span>Backup Location</span>
-                    <span id="backupLocation">/storage/emulated/0/PartBak</span>
+                    <span id="backupLocation">/storage/emulated/0/PartitionBackup</span>
                 </div>
                 <div class="status-item">
                     <span>Last Backup</span>
@@ -77,6 +77,15 @@
                         <span>Dynamic Partitions</span>
                         <span id="dynamicPartitionStatus">Checking...</span>
                     </div>
+                    <!-- Add this right after the dynamic partition section in the sidebar-body -->
+<div class="divider"></div>
+<div class="status-item toggle-item">
+    <span>Save MD5 Checksum</span>
+    <label class="toggle-switch">
+        <input type="checkbox" id="md5Toggle">
+        <span class="toggle-slider"></span>
+    </label>
+</div>
                     <div class="status-item toggle-item">
                         <span>Hide Inactive Slot</span>
                         <label class="toggle-switch">
