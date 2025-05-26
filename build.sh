@@ -13,10 +13,10 @@ CFLAGS="-Os -flto -fomit-frame-pointer -fdata-sections -ffunction-sections -Wl,-
 
 
 archs=(
-    "aarch64-linux-android$API-clang"
-    "armv7a-linux-androideabi$API-clang"
-    "i686-linux-android$API-clang"
-    "x86_64-linux-android$API-clang"
+    "aarch64-linux-android-clang"
+    "armv7a-linux-androideabi-clang"
+    "i686-linux-android-clang"
+    "x86_64-linux-android-clang"
 )
 
 names=("arm64-v8a" "armeabi-v7a" "x86" "x86_64")
