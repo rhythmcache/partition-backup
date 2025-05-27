@@ -21,7 +21,10 @@ fi
 
 mkdir -p "${MODPATH}/system/bin"
             
-[ -f "${bin_dir}/busybox" ] && busybox="${bin_dir}/busybox"
+
+if [ -f "${bin_dir}/busybox" ]; then
+  busybox="${bin_dir}/busybox"
+fi
 
 [ ! -f "/system/bin/blockdev" ] && ln -s "${busybox}" "${MODPATH}/system/bin/blockdev"
 
