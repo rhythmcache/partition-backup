@@ -28,6 +28,6 @@ mkdir -p "${MODPATH}/system/bin"
 [ ! -f "/system/bin/dd" ] && ln -s "${busybox}" "${MODPATH}/system/bin/dd"
 
 
-cp "${MODPATH}/bins/partition-${getprop ro.product.cpu.abi}" "${MODPATH}/system/bin/partition"
+cp "${MODPATH}/bins/partition-$(getprop ro.product.cpu.abi)" "${MODPATH}/system/bin/partition"
 
 set_perm_recursive "$MODPATH" 0 0 0755 0644
