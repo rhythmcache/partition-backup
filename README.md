@@ -23,6 +23,10 @@ Options:
 
 ### Screenshots
 - WebUI
-[1](./images/webui1.png)
-[2](./images/webui2.png)
-[cli](./images/cli.png)
+
+![WebUI 1](./images/webui1.png)  
+![WebUI 2](./images/webui2.png)
+
+- CLI
+
+![CLI](./images/cli.png)
