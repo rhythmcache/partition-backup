@@ -1,6 +1,6 @@
 ui_print "- Partition Backup"
 sleep 0.5
-ui_print "- Magisk Module to backup Android Device Partition"
+ui_print "- Utility To Backup or Save Android Device Partition"
 sleep 0.5
 ui_print "- $([ -f "${MODPATH}/module.prop" ] && grep -E "^version=" "${MODPATH}/module.prop") "
 sleep 0.5
