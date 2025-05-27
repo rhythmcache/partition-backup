@@ -43,6 +43,7 @@ jobs:
       - name: Get short commit hash
         id: commit
         run: echo "hash=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+             sed -i "s/^version=.*/version=gh-actions-${{ steps.commit.outputs.hash }}/" module/module.prop
 
       - name: Upload Module Artifact
         uses: actions/upload-artifact@v4
