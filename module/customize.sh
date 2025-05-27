@@ -29,5 +29,6 @@ mkdir -p "${MODPATH}/system/bin"
 
 
 cp "${MODPATH}/bins/partition-$(getprop ro.product.cpu.abi)" "${MODPATH}/system/bin/partition"
+rm -rf ${MODPATH}/bins
 
 set_perm_recursive "$MODPATH" 0 0 0755 0644
