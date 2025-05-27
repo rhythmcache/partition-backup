@@ -28,4 +28,4 @@ for i in {0..3}; do
     llvm-strip --strip-all "$OUT_DIR/partition-${names[i]}"
 done
 
-cd "$MODULE_DIR" && zip -r9 ../partition-backup.zip *
+cd "$MODULE_DIR" && zip -r ../partition-backup.zip *
