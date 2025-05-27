@@ -620,7 +620,7 @@
     
     .divider {
     height: 1px;
-    background-color: var(--border);
+    background-color: rgba(255, 255, 255, 0.05);
     margin: 16px 0;
     }
 
@@ -662,8 +662,6 @@
         vertical-align: middle;
     }
     
-
-
     .toggle-slider:before {
     position: absolute;
     content: "";
