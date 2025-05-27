@@ -6,6 +6,12 @@
 - Rooted Android Device
 
 ## Usage
+
+- `CLI` and `WebUI` both are supported
+
+
+
+-CLI Usage :
 ```
 Usage: partition [OPTIONS]
 Options:
@@ -14,4 +20,9 @@ Options:
   -l, --list                  List available partitions
   -h, --help                  Show help
 ```
-- Module WebUI Can also be used to backup Partitions
+
+### Screenshots
+- WebUI
+[1](./images/webui1.png)
+[2](./images/webui2.png)
+[cli](./images/cli.png)
