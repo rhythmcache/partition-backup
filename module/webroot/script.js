@@ -14,7 +14,6 @@ function getUniqueCallbackName(prefix) {
 }
 
 
-
 function showEnvironmentDialog() {
     const dialog = document.getElementById('environmentDialog');
     dialog.style.display = 'flex';
@@ -127,29 +126,22 @@ function closeProgressDialog() {
 
 async function findBootPartitionLocation() {
     const { stdout: byNameExists } = await exec('[ -d "/dev/block/by-name" ] && echo "yes" || echo "no"');
-    if (byNameExists === "yes") {
+    if (byNameExists.trim() === "yes") {
         const { stdout: bootExists } = await exec('[ -e "/dev/block/by-name/boot" -o -e "/dev/block/by-name/boot_a" ] && echo "yes" || echo "no"');
-        
-        if (bootExists === "yes") {
+        if (bootExists.trim() === "yes") {
             return "/dev/block/by-name";
         }
     }
     const { stdout: bootdeviceExists } = await exec('[ -d "/dev/block/bootdevice/by-name" ] && echo "yes" || echo "no"');
-    if (bootdeviceExists === "yes") {
+    if (bootdeviceExists.trim() === "yes") {
         const { stdout: bootExists } = await exec('[ -e "/dev/block/bootdevice/by-name/boot" -o -e "/dev/block/bootdevice/by-name/boot_a" ] && echo "yes" || echo "no"');
-        
-        if (bootExists === "yes") {
+        if (bootExists.trim() === "yes") {
             return "/dev/block/bootdevice/by-name";
         }
     }
-    const { stdout: bootDevice } = await exec('grep -o "androidboot.boot_devices=[^ ]*" /proc/cmdline | cut -d "=" -f2');
-    if (bootDevice) {
-        const path = `/dev/block/platform/${bootDevice}/by-name`;
-        const { stdout: pathExists } = await exec(`[ -d "${path}" ] && echo "yes" || echo "no"`);
-        
-        if (pathExists === "yes") {
-            return path;
-        }
+    const { stdout: bootPath } = await exec('find /dev/block/platform -name "boot*" | head -n1 | xargs dirname');
+    if (bootPath.trim()) {
+        return bootPath.trim();
     }
     return null;
 }
@@ -214,9 +206,9 @@ async function backupPartition(partition, isMultiBackup = false, currentIndex = 
             updateProgressDialogInfo(partition.name, currentIndex, totalCount);
         }
 
-        await exec('mkdir -p /storage/emulated/0/PartBak');
+        await exec('mkdir -p /storage/emulated/0/PartitionBackup');
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const backupFile = `/storage/emulated/0/PartBak/${partition.name}_${timestamp}.img`;
+        const backupFile = `/storage/emulated/0/PartitionBackup/${partition.name}_${timestamp}.img`;
         const ddCommand = `dd if=${partition.path} of=${backupFile} bs=8M conv=fsync,noerror`;
 
         document.getElementById('progressStatus').innerHTML = 'Backing up in progress...';
