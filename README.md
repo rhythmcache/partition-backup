@@ -21,11 +21,14 @@ Options:
   -h, --help                  Show help
 ```
 
+
 ### Screenshots
 - WebUI
 
-![WebUI 1](./images/webui1.png)  
-![WebUI 2](./images/webui2.png)
+<p align="center">
+  <img src="./images/webui1.png" alt="WebUI 1" width="45%" style="margin-right:10px;">
+  <img src="./images/webui2.png" alt="WebUI 2" width="45%">
+</p>
 
 - CLI
 
