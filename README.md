@@ -1,2 +1,7 @@
-# partbak
-shell script to backup android device partitions
+# Partition Backup
+- This Utility Allows You To Save Android Device Partition
+
+
+## Requirements
+- Rooted Android Device
+
