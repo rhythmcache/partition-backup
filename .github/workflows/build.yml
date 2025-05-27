@@ -1,0 +1,56 @@
+name: Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Tools
+        run: |
+          npm install -g terser clean-css-cli html-minifier-terser
+
+      - name: Minify
+        run: |
+          terser module/webroot/script.js -o module/webroot/script.js -c -m
+          cleancss -o module/webroot/style.css module/webroot/style.css
+          html-minifier-terser module/webroot/index.html -o module/webroot/index.html \
+            --collapse-whitespace --remove-comments --minify-js true --minify-css true
+
+      - name: Set up Android NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r27c
+          add-to-path: true
+
+      - name: Build binaries
+        run: |
+          echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME" >> $GITHUB_ENV
+          echo "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
+          chmod +x $(pwd)/build.sh
+          source $(pwd)/build.sh
+
+      - name: Get short commit hash
+        id: commit
+        run: echo "hash=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+      
+      - name: Update version
+        run: |
+          sed -i "s/^version=.*/version=gh-actions-${{ steps.commit.outputs.hash }}/" module/module.prop
+        
+      - name: Upload Module Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: partition-backup-magisk-module-${{ steps.commit.outputs.hash }}
+          path: module/
