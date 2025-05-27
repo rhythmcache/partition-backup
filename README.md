@@ -5,6 +5,11 @@
 ## Requirements
 - Rooted Android Device
 
+## Installation 
+- Flash Module in KSU/APATCH/MAGISK
+- Reboot Your Device
+
+
 ## Usage
 
 - `CLI` and `WebUI` both are supported
