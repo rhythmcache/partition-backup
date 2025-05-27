@@ -14,3 +14,4 @@ Options:
   -l, --list                  List available partitions
   -h, --help                  Show help
 ```
+- Module WebUI Can also be used to backup Partitions
