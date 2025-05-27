@@ -19,7 +19,7 @@ elif [ "${MAGISK_VER_CODE}" ]; then
     bin_dir="/data/adb/magisk"
 fi    
 
-mkdir -p "${MODPATH}/system/bin
+mkdir -p "${MODPATH}/system/bin"
             
 [ -f "${bin_dir}/busybox" ] && busybox="${bin_dir}/busybox"
 
@@ -28,22 +28,6 @@ mkdir -p "${MODPATH}/system/bin
 [ ! -f "/system/bin/dd" ] && ln -s "${busybox}" "${MODPATH}/system/bin/dd"
 
 
-ui_print "- Checking for partitions"
-paths="/dev/block/by-name /dev/block/bootdevice/by-name /dev/block/platform/$(grep -o 'androidboot.boot_devices=[^ ]*' /proc/cmdline | cut -d '=' -f2)/by-name"
-found=""
-
-for p in $paths; do
-  if [ -d "$p" ] && ls "$p"/boot* >/dev/null 2>&1; then
-    ui_print "- Found in: $p"
-    found="$p"
-    break
-  fi
-done
-
-
-[ -z "$found" ] && abort "- couldn't detect partitions. Aborting Installation"
-
 cp "${MODPATH}/bins/partition-${getprop ro.product.cpu.abi}" "${MODPATH}/system/bin/partition"
 
 set_perm_recursive "$MODPATH" 0 0 0755 0644
-chmod +x "$MODPATH/system/bin/partition"
