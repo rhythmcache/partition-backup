@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Partition Backup</title>
+    <title>PartBak</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
@@ -61,21 +61,21 @@
             <span>Storage Available</span>
             <span id="storageAvailable">Checking...</span>
           </div>
-          <!-- Added Patch Starts Here -->
           <div class="divider"></div>
-          <div id="dynamicPartitionSection" style="display: none;">
+          <!-- MD5 Toggle - now outside dynamic partition section -->
+          <div class="status-item toggle-item">
+            <span>Save MD5 Checksum</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="md5Toggle">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <!-- Dynamic Partition Section - only contains dynamic partition specific items -->
+          <div id="dynamicPartitionSection" class="hidden">
+            <div class="divider"></div>
             <div class="status-item dynamic-status">
               <span>Dynamic Partitions</span>
               <span id="dynamicPartitionStatus">Checking...</span>
-            </div>
-            <!-- Add this right after the dynamic partition section in the sidebar-body -->
-            <div class="divider"></div>
-            <div class="status-item toggle-item">
-              <span>Save MD5 Checksum</span>
-              <label class="toggle-switch">
-                <input type="checkbox" id="md5Toggle">
-                <span class="toggle-slider"></span>
-              </label>
             </div>
             <div class="status-item toggle-item">
               <span>Hide Inactive Slot</span>
@@ -89,45 +89,44 @@
               <span id="activeSlotInfo">-</span>
             </div>
           </div>
-        </div>
-        <div class="sidebar-footer">
-          <p class="sidebar-link" onclick="openLink('https://github.com/rhythmcache')">GitHub</p>
-          <p class="sidebar-link" onclick="openLink('https://t.me/rhythmcache')">Telegram</p>
-        </div>
-      </div>
-    </div>
-    <div id="confirmDialog" class="confirm-dialog">
-      <div class="dialog-content">
-        <h2 id="confirmTitle">Confirm Action</h2>
-        <p id="confirmMessage">Are you sure you want to continue?</p>
-        <div class="btn-group">
-          <button id="confirmNo" class="btn">Cancel</button>
-          <button id="confirmYes" class="btn btn-save">Confirm</button>
+          <div class="sidebar-footer">
+            <p class="sidebar-link" onclick="openLink('https://github.com/rhythmcache')">GitHub</p>
+            <p class="sidebar-link" onclick="openLink('https://t.me/rhythmcache')">Telegram</p>
+          </div>
         </div>
       </div>
-    </div>
-    <div id="progressDialog" class="dialog">
-      <div class="dialog-content">
-        <h2>Backup in Progress</h2>
-        <p id="currentPartition">Backing up: boot</p>
-        <div class="progress" style="text-align: center; margin: 20px 0; height: auto; background: transparent;">
-          <div class="loader"></div>
-        </div>
-        <p id="progressStatus" class="status-text">Please wait...</p>
-        <div class="btn-group">
-          <button id="cancelBackup" class="btn">Cancel</button>
+      <div id="confirmDialog" class="confirm-dialog">
+        <div class="dialog-content">
+          <h2 id="confirmTitle">Confirm Action</h2>
+          <p id="confirmMessage">Are you sure you want to continue?</p>
+          <div class="btn-group">
+            <button id="confirmNo" class="btn">Cancel</button>
+            <button id="confirmYes" class="btn btn-save">Confirm</button>
+          </div>
         </div>
       </div>
-    </div>
-    <div id="environmentDialog" class="dialog">
-      <div class="dialog-content">
-        <h2>Unsupported Environment</h2>
-        <p>ksu.exec is undefined</p>
-        <div class="btn-group">
-          <button id="closeApp" class="btn btn-save">Try Again</button>
+      <div id="progressDialog" class="dialog">
+        <div class="dialog-content">
+          <h2>Backup in Progress</h2>
+          <p id="currentPartition">Backing up: boot</p>
+          <div class="progress" style="text-align: center; margin: 20px 0; height: auto; background: transparent;">
+            <div class="loader"></div>
+          </div>
+          <p id="progressStatus" class="status-text">Please wait...</p>
+          <div class="btn-group">
+            <button id="cancelBackup" class="btn">Cancel</button>
+          </div>
         </div>
       </div>
-    </div>
-    <script src="script.js"></script>
+      <div id="environmentDialog" class="dialog">
+        <div class="dialog-content">
+          <h2>Unsupported Environment</h2>
+          <p>ksu.exec is undefined</p>
+          <div class="btn-group">
+            <button id="closeApp" class="btn btn-save">Try Again</button>
+          </div>
+        </div>
+      </div>
+      <script src="script.js"></script>
   </body>
 </html>
