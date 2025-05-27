@@ -62,7 +62,7 @@ async function checkDynamicPartitions() {
 	try {
 		const {
 			stdout: isDynamic
-		} = await exec('etprop ro.boot.dynamic_partitions');
+		} = await exec('getprop ro.boot.dynamic_partitions');
 		isDynamicPartition = isDynamic.trim() === 'true';
 		const dynamicSection = document.getElementById('dynamicPartitionSection');
 		const dynamicStatus = document.getElementById('dynamicPartitionStatus');
