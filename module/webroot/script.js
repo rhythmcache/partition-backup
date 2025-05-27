@@ -379,7 +379,7 @@ function renderPartitionList(partitionsToRender) {
         }     
         partitionElement.innerHTML = `
             <div class="partition-info">
-                <img src="logo.png" alt="IMG" class="partition-image">
+                <img src="logo.svg" alt="IMG" class="partition-image">
                 <div>
                     <div class="partition-name">${partition.name}</div>
                     <div class="partition-path">${partition.path}</div>
