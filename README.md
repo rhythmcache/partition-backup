@@ -25,7 +25,7 @@ Options:
   -l, --list                  List available partitions
   -h, --help                  Show help
 ```
-- Example : To backup, boot, vendor system to internal storage, run
+- Example : To backup, boot, vendor and system to internal storage, run
 
 ```
 partition -b boot,vendor,system -d /sdcard
