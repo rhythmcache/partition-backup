@@ -18,11 +18,12 @@ archs=(
     "armv7a-linux-androideabi${API}-clang"
     "i686-linux-android${API}-clang"
     "x86_64-linux-android${API}-clang"
+    "riscv64-linux-android35-clang"
 )
 
-names=("arm64-v8a" "armeabi-v7a" "x86" "x86_64")
+names=("arm64-v8a" "armeabi-v7a" "x86" "x86_64" "riscv64")
 
-for i in {0..3}; do
+for i in {0..4}; do
     echo "Building for ${names[i]}..."
     ${archs[i]} $CFLAGS $SRC -o "$OUT_DIR/partition-${names[i]}"
     llvm-strip --strip-all "$OUT_DIR/partition-${names[i]}"
