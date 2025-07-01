@@ -7,6 +7,9 @@ let isDynamicPartition = false;
 let currentActiveSlot = "";
 let isHidingInactiveSlots = false;
 let saveMD5 = localStorage.getItem('saveMD5') === 'true';
+let backupLocation = localStorage.getItem('backupLocation') || '/storage/emulated/0/PartitionBackup';
+let selectedImagePath = null;
+let selectedFlashPartition = null;
 
 
 function getUniqueCallbackName(prefix) {
@@ -26,7 +29,19 @@ function showEnvironmentDialog() {
 	});
 }
 
-
+function setupBackupLocationSelector() {
+	const backupLocationElement = document.getElementById('backupLocation');
+	backupLocationElement.textContent = backupLocation;
+	backupLocationElement.style.cursor = 'pointer';
+	backupLocationElement.style.textDecoration = 'underline';
+	backupLocationElement.addEventListener('click', () => {
+		fileManager.open('directory', (selectedPath) => {
+			backupLocation = selectedPath;
+			localStorage.setItem('backupLocation', backupLocation);
+			backupLocationElement.textContent = backupLocation;
+		});
+	});
+}
 
 async function exec(command) {
 	return new Promise((resolve, reject) => {
@@ -133,6 +148,17 @@ function closeProgressDialog() {
 	document.getElementById('progressDialog').style.display = 'none';
 }
 
+async function getFileSize(filePath) {
+	try {
+		const {
+			stdout
+		} = await exec(`stat -c %s "${filePath}"`);
+		return parseInt(stdout.trim());
+	} catch (error) {
+		console.error('Error getting file size:', error);
+		return 0;
+	}
+}
 
 
 async function findBootPartitionLocation() {
@@ -233,9 +259,9 @@ async function backupPartition(partition, isMultiBackup = false, currentIndex = 
 			updateProgressDialogInfo(partition.name, currentIndex, totalCount);
 		}
 
-		await exec('mkdir -p /storage/emulated/0/PartitionBackup');
+		await exec(`mkdir -p "${backupLocation}"`);
 		const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-		const backupFile = `/storage/emulated/0/PartitionBackup/${partition.name}_${timestamp}.img`;
+		const backupFile = `${backupLocation}/${partition.name}_${timestamp}.img`;
 		const ddCommand = `dd if=${partition.path} of=${backupFile} bs=8M conv=fsync,noerror`;
 
 		document.getElementById('progressStatus').innerHTML = 'Backing up in progress...';
@@ -579,6 +605,191 @@ async function backupSelectedPartitions() {
 }
 
 
+function openFlashDialog() {
+	document.getElementById('sidebarBackupStatus').classList.remove('active');
+	document.querySelector('.sidebar-overlay').style.display = 'none';
+
+	showConfirmDialog(
+		"Warning: ",
+		"Flashing incorrect images can damage or brick your device. Proceed with caution!",
+		() => {
+			fileManager.open('image', (imagePath) => {
+				selectedImagePath = imagePath;
+				showPartitionSelectionDialog();
+			});
+		}
+	);
+}
+
+function showPartitionSelectionDialog() {
+	const dialog = document.getElementById('flashDialog');
+	const partitionList = document.getElementById('flashPartitionList');
+	selectedFlashPartition = null;
+	partitionList.innerHTML = '';
+
+	// Get image size
+	let imageSizePromise = Promise.resolve(0);
+	if (selectedImagePath) {
+		imageSizePromise = getFileSize(selectedImagePath);
+	}
+
+	imageSizePromise.then(imageSize => {
+		// Filter partitions to only show those <= 512MB
+		const eligiblePartitions = partitionsFound.filter(partition => {
+			const sizeBytes = parseInt(partition.sizeBytes);
+			return sizeBytes <= 512 * 1024 * 1024;
+		});
+
+		if (eligiblePartitions.length === 0) {
+			partitionList.innerHTML = '<div class="no-partitions">No eligible partitions found (must be ≤512MB)</div>';
+		} else {
+			eligiblePartitions.forEach(partition => {
+				const partitionElement = document.createElement('div');
+				partitionElement.className = 'partition-item';
+
+				const partitionSize = parseInt(partition.sizeBytes);
+				const isTooSmall = imageSize > 0 && imageSize > partitionSize;
+
+				if (isTooSmall) {
+					partitionElement.classList.add('disabled');
+				}
+
+				partitionElement.innerHTML = `
+                    <div class="partition-info">
+                        <img src="logo.svg" alt="IMG" class="partition-image">
+                        <div>
+                            <div class="partition-name">${partition.name}</div>
+                            <div class="partition-path">${partition.path}</div>
+                        </div>
+                    </div>
+                    <div class="partition-action">
+                        <span class="partition-size ${isTooSmall ? 'too-large' : ''}">${partition.size}</span>
+                        <div class="selection-checkbox"></div>
+                    </div>
+                `;
+
+				if (!isTooSmall) {
+					partitionElement.addEventListener('click', () => {
+						document.querySelectorAll('#flashPartitionList .partition-item').forEach(el => {
+							el.classList.remove('selected');
+						});
+						partitionElement.classList.add('selected');
+						selectedFlashPartition = partition;
+					});
+				}
+
+				partitionList.appendChild(partitionElement);
+			});
+		}
+
+
+		const ineligibleCount = partitionsFound.length - eligiblePartitions.length;
+		if (ineligibleCount > 0) {
+			const warning = document.createElement('div');
+			warning.className = 'status-text';
+			warning.style.marginTop = '10px';
+			warning.style.color = '#ff9500';
+			warning.textContent = `${ineligibleCount} partition(s) hidden (size >512MB)`;
+			partitionList.appendChild(warning);
+		}
+	});
+
+	document.getElementById('cancelFlash').addEventListener('click', () => {
+		dialog.style.display = 'none';
+	});
+
+	document.getElementById('confirmFlash').addEventListener('click', async () => {
+		if (!selectedFlashPartition) {
+			alert('Please select a partition to flash');
+			return;
+		}
+		dialog.style.display = 'none';
+		await flashPartition(selectedImagePath, selectedFlashPartition);
+	});
+
+	dialog.style.display = 'flex';
+}
+
+function formatBytes(bytes) {
+	if (bytes === 0) return '0 Bytes';
+	const k = 1024;
+	const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+	const i = Math.floor(Math.log(bytes) / Math.log(k));
+	return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+async function flashPartition(imagePath, partition) {
+	const dialog = document.getElementById('progressDialog');
+	document.getElementById('currentPartition').textContent = `Flashing: ${partition.name}`;
+	document.getElementById('progressStatus').textContent = 'Starting flash...';
+	dialog.style.display = 'flex';
+
+	try {
+		// Check if image exists
+		const {
+			stdout: imageExists
+		} = await exec(`[ -f "${imagePath}" ] && echo "yes" || echo "no"`);
+		if (imageExists.trim() !== 'yes') {
+			throw new Error('Image file not found');
+		}
+
+		// Check if partition exists
+		const {
+			stdout: partitionExists
+		} = await exec(`[ -e "${partition.path}" ] && echo "yes" || echo "no"`);
+		if (partitionExists.trim() !== 'yes') {
+			throw new Error('Partition not found');
+		}
+
+		// Get image size and partition size
+		const imageSize = await getFileSize(imagePath);
+		const partitionSize = parseInt(partition.sizeBytes);
+
+		// Compare sizes
+		if (imageSize > partitionSize) {
+			dialog.style.display = 'none';
+			showConfirmDialog(
+				"Size Mismatch",
+				`Cannot flash - Image size (${formatBytes(imageSize)}) is larger than partition size (${partition.size})`,
+				() => {
+					// User confirmed they want to proceed anyway, ( useless tho )
+					dialog.style.display = 'flex';
+					performActualFlash();
+				}
+			);
+			return;
+		}
+
+		// If sizes are OK, proceed with flashing
+		await performActualFlash();
+
+		async function performActualFlash() {
+			const ddCommand = `dd if=${imagePath} of=${partition.path} bs=8M conv=fsync,noerror`;
+			document.getElementById('progressStatus').textContent = 'Flashing in progress...';
+
+			const result = await exec(ddCommand);
+
+			if (result.errno === 0) {
+				document.getElementById('progressStatus').textContent = "Flash completed successfully!";
+				setTimeout(() => {
+					dialog.style.display = 'none';
+					alert(`Successfully flashed ${partition.name}`);
+				}, 1000);
+			} else {
+				throw new Error(`Flash failed: ${result.stderr}`);
+			}
+		}
+	} catch (error) {
+		console.error(`Flash failed: ${error}`);
+		document.getElementById('progressStatus').textContent = "Flash failed!";
+		setTimeout(() => {
+			dialog.style.display = 'none';
+			alert(`Failed to flash ${partition.name}: ${error.message}`);
+		}, 1000);
+	}
+}
+
+
 async function init() {
 	try {
 		if (window.isEnvironmentBlocked) {
@@ -603,6 +814,7 @@ async function init() {
 		renderPartitionList(partitionsFound);
 		await updateStorageInfo();
 		await updateLastBackup();
+		setupBackupLocationSelector();
 		document.getElementById('backupAllBtn').addEventListener('click', backupAllPartitions);
 		document.getElementById('cancelSelectionBtn').addEventListener('click', () => toggleSelectionMode(false));
 		document.getElementById('backupSelectedBtn').addEventListener('click', backupSelectedPartitions);

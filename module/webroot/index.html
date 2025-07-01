@@ -1,132 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <title>PartBak</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-  </head>
-  <body>
+</head>
+
+<body>
     <div class="mmrl-safe-area">
-      <div class="container">
-        <div class="header">
-          <div class="header-controls">
-            <div class="menu-icon" id="menuIcon">
-              <div class="menu-line"></div>
-              <div class="menu-line"></div>
-              <div class="menu-line"></div>
+        <div class="container">
+            <div class="header">
+                <div class="header-controls">
+                    <div class="menu-icon" id="menuIcon">
+                        <div class="menu-line"></div>
+                        <div class="menu-line"></div>
+                        <div class="menu-line"></div>
+                    </div>
+                    <h1>Partition Backup</h1>
+                </div>
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Search partitions..." class="search-input">
+                </div>
             </div>
-            <h1>Partition Backup</h1>
-          </div>
-          <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Search partitions..." class="search-input">
-          </div>
+            <div class="card">
+                <h2>Device Partitions</h2>
+                <div id="loading" class="loading">
+                    <div class="loader"></div>
+                    <span>Detecting partitions...</span>
+                </div>
+                <div id="partitionList" class="list-container"></div>
+                <div id="selectionModeIndicator" class="selection-mode-indicator">
+                    <div class="selection-count">
+                        <span id="selectionCount">0</span> selected
+                    </div>
+                    <div class="selection-actions">
+                        <button id="cancelSelectionBtn" class="btn btn-small">Cancel</button>
+                    </div>
+                </div>
+                <button id="backupAllBtn" class="btn">Backup All Partitions</button>
+                <button id="backupSelectedBtn" class="btn">Backup Selected Partitions</button>
+            </div>
         </div>
-        <div class="card">
-          <h2>Device Partitions</h2>
-          <div id="loading" class="loading">
-            <div class="loader"></div>
-            <span>Detecting partitions...</span>
-          </div>
-          <div id="partitionList" class="list-container"></div>
-          <div id="selectionModeIndicator" class="selection-mode-indicator">
-            <div class="selection-count">
-              <span id="selectionCount">0</span> selected
-            </div>
-            <div class="selection-actions">
-              <button id="cancelSelectionBtn" class="btn btn-small">Cancel</button>
-            </div>
-          </div>
-          <button id="backupAllBtn" class="btn">Backup All Partitions</button>
-          <button id="backupSelectedBtn" class="btn">Backup Selected Partitions</button>
-        </div>
-      </div>
     </div>
     <div id="sidebarBackupStatus" class="sidebar">
-      <div class="sidebar-content">
-        <div class="sidebar-header">
-          <h2>Backup Status</h2>
-          <div class="close-btn" id="closeSidebar">&times;</div>
-        </div>
-        <div class="sidebar-body">
-          <div class="status-item">
-            <span>Backup Location</span>
-            <span id="backupLocation">/storage/emulated/0/PartitionBackup</span>
-          </div>
-          <div class="status-item">
-            <span>Last Backup</span>
-            <span id="lastBackup">Never</span>
-          </div>
-          <div class="status-item">
-            <span>Storage Available</span>
-            <span id="storageAvailable">Checking...</span>
-          </div>
-          <div class="divider"></div>
-          <!-- MD5 Toggle - now outside dynamic partition section -->
-          <div class="status-item toggle-item">
-            <span>Save MD5 Checksum</span>
-            <label class="toggle-switch">
-              <input type="checkbox" id="md5Toggle">
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-          <!-- Dynamic Partition Section - only contains dynamic partition specific items -->
-          <div id="dynamicPartitionSection" class="hidden">
-            <div class="divider"></div>
-            <div class="status-item dynamic-status">
-              <span>Dynamic Partitions</span>
-              <span id="dynamicPartitionStatus">Checking...</span>
+        <div class="sidebar-content">
+            <div class="sidebar-header">
+                <h2>Backup Status</h2>
+                <div class="close-btn" id="closeSidebar">&times;</div>
             </div>
-            <div class="status-item toggle-item">
-              <span>Hide Inactive Slot</span>
-              <label class="toggle-switch">
-                <input type="checkbox" id="hideInactiveToggle">
-                <span class="toggle-slider"></span>
-              </label>
+            <div class="sidebar-body">
+                <div class="status-item">
+                    <span>Backup Location</span>
+                    <span id="backupLocation">/storage/emulated/0/PartitionBackup</span>
+                </div>
+                <div class="status-item">
+                    <span>Last Backup</span>
+                    <span id="lastBackup">Never</span>
+                </div>
+                <div class="status-item">
+                    <span>Storage Available</span>
+                    <span id="storageAvailable">Checking...</span>
+                </div>
+                <div class="divider"></div>
+
+                <div class="status-item toggle-item">
+                    <span>Save MD5 Checksum</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="md5Toggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="divider"></div>
+                <div class="status-item flash-item" onclick="openFlashDialog()">
+                    <span>Flash Images</span>
+                    <svg class="file-manager-icon" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                        <path d="M13 2.05v3.03c3.39.49 6 3.39 6 6.92 0 .9-.18 1.75-.5 2.54l2.62 1.53c.56-1.24.88-2.62.88-4.07 0-5.18-3.95-9.45-9-9.95zM12 19c-3.87 0-7-3.13-7-7 0-3.53 2.61-6.43 6-6.92V2.05c-5.06.5-9 4.76-9 9.95 0 5.52 4.47 10 9.99 10 3.31 0 6.24-1.61 8.06-4.09l-2.6-1.53C16.17 17.98 14.21 19 12 19z"
+                        />
+                    </svg>
+                </div>
+
+                <div id="dynamicPartitionSection" class="hidden">
+                    <div class="divider"></div>
+                    <div class="status-item dynamic-status">
+                        <span>Dynamic Partitions</span>
+                        <span id="dynamicPartitionStatus">Checking...</span>
+                    </div>
+                    <div class="status-item toggle-item">
+                        <span>Hide Inactive Slot</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="hideInactiveToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="status-item slot-info">
+                        <span>Current Active Slot</span>
+                        <span id="activeSlotInfo">-</span>
+                    </div>
+                </div>
+                <div class="sidebar-footer">
+                    <p class="sidebar-link" onclick="openLink('https://github.com/rhythmcache')">GitHub</p>
+                    <p class="sidebar-link" onclick="openLink('https://t.me/rhythmcache')">Telegram</p>
+                </div>
             </div>
-            <div class="status-item slot-info">
-              <span>Current Active Slot</span>
-              <span id="activeSlotInfo">-</span>
+        </div>
+        <div id="confirmDialog" class="confirm-dialog">
+            <div class="dialog-content">
+                <h2 id="confirmTitle">Confirm Action</h2>
+                <p id="confirmMessage">Are you sure you want to continue?</p>
+                <div class="btn-group">
+                    <button id="confirmNo" class="btn">Cancel</button>
+                    <button id="confirmYes" class="btn btn-save">Confirm</button>
+                </div>
             </div>
-          </div>
-          <div class="sidebar-footer">
-            <p class="sidebar-link" onclick="openLink('https://github.com/rhythmcache')">GitHub</p>
-            <p class="sidebar-link" onclick="openLink('https://t.me/rhythmcache')">Telegram</p>
-          </div>
         </div>
-      </div>
-      <div id="confirmDialog" class="confirm-dialog">
-        <div class="dialog-content">
-          <h2 id="confirmTitle">Confirm Action</h2>
-          <p id="confirmMessage">Are you sure you want to continue?</p>
-          <div class="btn-group">
-            <button id="confirmNo" class="btn">Cancel</button>
-            <button id="confirmYes" class="btn btn-save">Confirm</button>
-          </div>
+
+        <div id="flashDialog" class="dialog">
+            <div class="dialog-content">
+                <h2>Flash Partition</h2>
+                <div id="flashPartitionList" class="list-container"></div>
+                <div class="btn-group">
+                    <button id="cancelFlash" class="btn">Cancel</button>
+                    <button id="confirmFlash" class="btn btn-save">Flash</button>
+                </div>
+            </div>
         </div>
-      </div>
-      <div id="progressDialog" class="dialog">
-        <div class="dialog-content">
-          <h2>Backup in Progress</h2>
-          <p id="currentPartition">Backing up: boot</p>
-          <div class="progress" style="text-align: center; margin: 20px 0; height: auto; background: transparent;">
-            <div class="loader"></div>
-          </div>
-          <p id="progressStatus" class="status-text">Please wait...</p>
-          <div class="btn-group">
-            <button id="cancelBackup" class="btn">Cancel</button>
-          </div>
+        <div id="progressDialog" class="dialog">
+            <div class="dialog-content">
+                <h2>Backup in Progress</h2>
+                <p id="currentPartition">Backing up: boot</p>
+                <div class="progress" style="text-align: center; margin: 20px 0; height: auto; background: transparent;">
+                    <div class="loader"></div>
+                </div>
+                <p id="progressStatus" class="status-text">Please wait...</p>
+                <div class="btn-group">
+                    <button id="cancelBackup" class="btn">Cancel</button>
+                </div>
+            </div>
         </div>
-      </div>
-      <div id="environmentDialog" class="dialog">
-        <div class="dialog-content">
-          <h2>Unsupported Environment</h2>
-          <p>ksu.exec is undefined</p>
-          <div class="btn-group">
-            <button id="closeApp" class="btn btn-save">Try Again</button>
-          </div>
+        <div id="environmentDialog" class="dialog">
+            <div class="dialog-content">
+                <h2>Unsupported Environment</h2>
+                <p>ksu.exec is undefined</p>
+                <div class="btn-group">
+                    <button id="closeApp" class="btn btn-save">Try Again</button>
+                </div>
+            </div>
         </div>
-      </div>
-      <script src="script.js"></script>
-  </body>
+        <script src="script.js"></script>
+        <script src="file-manager.js"></script>
+</body>
+
 </html>

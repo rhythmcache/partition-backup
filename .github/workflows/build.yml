@@ -23,6 +23,7 @@ jobs:
       - name: Minify
         run: |
           terser module/webroot/script.js -o module/webroot/script.js -c -m
+          terser module/webroot/script.js -o module/webroot/file-manager.js -c -m
           cleancss -o module/webroot/style.css module/webroot/style.css
           html-minifier-terser module/webroot/index.html -o module/webroot/index.html \
             --collapse-whitespace --remove-comments --minify-js true --minify-css true
