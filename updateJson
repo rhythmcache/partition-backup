@@ -1,6 +1,6 @@
 {
-  "version": "gh-actions-397f009",
-  "versionCode": 1,
-  "zipUrl": "https://github.com/rhythmcache/partition-backup/releases/download/V1/partition-backup-magisk-module-1608538.zip",
+  "version": "gh-actions-5d1c7b4",
+  "versionCode": 2,
+  "zipUrl": "https://github.com/rhythmcache/partition-backup/releases/download/V2/partition-backup-magisk-module-5d1c7b4.zip",
   "changelog": "https://raw.githubusercontent.com/rhythmcache/partition-backup/main/changelogs.md"
 }
