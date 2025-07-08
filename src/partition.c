@@ -126,7 +126,7 @@ int search_partition_in_dir(const char *dir_path, const char *target) {
     }
     
     while ((entry = readdir(dp)) != NULL) {
-        if (strncmp(entry->d_name, target, strlen(target)) == 0) {
+        if (strncasecmp(entry->d_name, target, strlen(target)) == 0) {
             closedir(dp);
             return 1;
         }
