@@ -19,7 +19,6 @@ int parse_arguments(int argc, char *argv[], program_args_t *args) {
         {0, 0, 0, 0}
     };
 
-    
     memset(args, 0, sizeof(program_args_t));
     strcpy(args->backup_dir, ".");
 
@@ -76,6 +75,49 @@ void format_size(off_t size_bytes, char *output, size_t output_size) {
     } else {
         snprintf(output, output_size, "%.2f GB", size / (1024 * 1024 * 1024));
     }
+}
+
+int get_terminal_width(void) {
+    struct winsize ws;
+    
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) != -1 && ws.ws_col > 0) {
+        return ws.ws_col;
+    }
+    
+    char *cols_env = getenv("COLUMNS");
+    if (cols_env != NULL) {
+        int cols = atoi(cols_env);
+        if (cols > 0) {
+            return cols;
+        }
+    }
+    
+    return DEFAULT_TERMINAL_WIDTH;
+}
+
+void print_truncated(const char *str, int max_width) {
+    if (max_width <= 0) return;
+    
+    int len = strlen(str);
+    if (len <= max_width) {
+        printf("%-*s", max_width, str);
+    } else {
+        if (max_width >= 4) {
+            printf("%.*s...", max_width - 3, str);
+            for (int i = len + 3; i < max_width; i++) {
+                printf(" ");
+            }
+        } else {
+            printf("%.*s", max_width, str);
+        }
+    }
+}
+
+void print_separator_line(int width) {
+    for (int i = 0; i < width && i < 200; i++) {
+        printf("=");
+    }
+    printf("\n");
 }
 
 char *find_partition_directory(void) {
@@ -155,14 +197,12 @@ int search_partition_recursive(const char *base_path, const char *target, char *
         snprintf(full_path, sizeof(full_path), "%s/%s", base_path, entry->d_name);
         
         if (stat(full_path, &statbuf) == 0 && S_ISDIR(statbuf.st_mode)) {
-            // check if this directory contains our target partition
             if (search_partition_in_dir(full_path, target)) {
                 strcpy(found_path, full_path);
                 closedir(dp);
                 return 1;
             }
             
-            // recursively search subdirectories
             if (search_partition_recursive(full_path, target, found_path)) {
                 closedir(dp);
                 return 1;
@@ -182,8 +222,33 @@ int list_partitions(const char *partition_dir) {
     char size_str[16];
     off_t size;
     
-    printf("%-24s %-32s %s\n", "Partition",  "Path",     "Size");
-    printf("%-24s %-32s %s\n", "=========", "=========", "====");
+    int terminal_width = get_terminal_width();
+    
+    int size_col_width = 10;
+    int spacing = 4;
+    int available_width = terminal_width - size_col_width - spacing;
+    
+    int partition_col_width, path_col_width;
+    
+    if (terminal_width < 60) {
+        partition_col_width = available_width;
+        path_col_width = 0;
+        
+        printf("%-*s %s\n", partition_col_width, "Partition", "Size");
+        print_separator_line(terminal_width);
+    } else if (terminal_width < 100) {
+        partition_col_width = available_width * 0.4;
+        path_col_width = available_width * 0.6;
+        
+        printf("%-*s %-*s %s\n", partition_col_width, "Partition", path_col_width, "Path", "Size");
+        print_separator_line(terminal_width);
+    } else {
+        partition_col_width = 24;
+        path_col_width = available_width - partition_col_width;
+        
+        printf("%-*s %-*s %s\n", partition_col_width, "Partition", path_col_width, "Path", "Size");
+        print_separator_line(terminal_width);
+    }
     
     dp = opendir(partition_dir);
     if (dp == NULL) {
@@ -208,7 +273,15 @@ int list_partitions(const char *partition_dir) {
         size = get_partition_size(full_path);
         format_size(size, size_str, sizeof(size_str));
         
-        printf("%-24s %-32s %s\n", entry->d_name, real_path, size_str);
+        if (path_col_width == 0) {
+            print_truncated(entry->d_name, partition_col_width);
+            printf(" %s\n", size_str);
+        } else {
+            print_truncated(entry->d_name, partition_col_width);
+            printf(" ");
+            print_truncated(real_path, path_col_width);
+            printf(" %s\n", size_str);
+        }
     }
     
     closedir(dp);
@@ -287,6 +360,7 @@ int copy_partition(const char *source, const char *dest) {
     ssize_t bytes_read, bytes_written;
     off_t total_bytes = 0;
     off_t total_size;
+    int terminal_width = get_terminal_width();
     
     src_fd = open(source, O_RDONLY);
     if (src_fd < 0) {
@@ -294,7 +368,6 @@ int copy_partition(const char *source, const char *dest) {
         return -1;
     }
     
-    // Get total size for progress calculation
     total_size = get_partition_size(source);
     if (total_size <= 0) {
         printf("Warning: Could not determine partition size\n");
@@ -320,15 +393,19 @@ int copy_partition(const char *source, const char *dest) {
         }
         total_bytes += bytes_written;
         
-        // Calculate progress percentage
         int progress = (int)((total_bytes * 100) / total_size);
-        int bars = progress / 2; // 50 characters max (100% / 2)
+        
+        int progress_bar_width = terminal_width - 22;
+        if (progress_bar_width < 10) progress_bar_width = 10;
+        if (progress_bar_width > 50) progress_bar_width = 50;
+        
+        int bars = (progress * progress_bar_width) / 100;
         
         printf("\r[");
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < progress_bar_width; i++) {
             if (i < bars) {
                 printf("=");
-            } else if (i == bars && progress % 2) {
+            } else if (i == bars && progress < 100) {
                 printf(">");
             } else {
                 printf(" ");
