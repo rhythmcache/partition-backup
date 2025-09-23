@@ -15,12 +15,14 @@
 #include <linux/fs.h>
 #include <sys/ioctl.h>
 #include <libgen.h>
+#include <termios.h> 
 
 #define MAX_PATH_LEN 512
 #define MAX_PARTITIONS 644
 #define BUFFER_SIZE 4194304 
 #define MAX_PARTITION_NAME 644
-
+#define MIN_TERMINAL_WIDTH 80 
+#define DEFAULT_TERMINAL_WIDTH 80
 
 typedef struct {
     char name[MAX_PARTITION_NAME];
@@ -28,7 +30,6 @@ typedef struct {
     char real_path[MAX_PATH_LEN];
     off_t size;
 } partition_info_t;
-
 
 typedef struct {
     int backup_mode;
@@ -38,6 +39,7 @@ typedef struct {
     int partition_count;
 } program_args_t;
 
+// Function declarations
 void print_usage(const char *program_name);
 int parse_arguments(int argc, char *argv[], program_args_t *args);
 char *find_partition_directory(void);
@@ -52,5 +54,10 @@ int file_exists(const char *path);
 int is_directory(const char *path);
 void create_directory_if_not_exists(const char *path);
 void format_size(off_t size_bytes, char *output, size_t output_size);
+
+// Terminal width handling functions
+int get_terminal_width(void);
+void print_truncated(const char *str, int max_width);
+void print_separator_line(int width);
 
 #endif
